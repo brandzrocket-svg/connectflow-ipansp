@@ -23,8 +23,8 @@ export default function Dashboard() {
   const { user, logout, isAuthenticated } = useAuth();
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(6);
-  const { eventos, addEvento, removeEvento, refresh: refreshEventos } = useEventos(year, month);
-  const { escalas, refresh: refreshEscalas } = useEscalas();
+  const { eventos, addEvento, removeEvento, refresh: refreshEventos, loading: loadingEventos } = useEventos(year, month);
+  const { escalas, refresh: refreshEscalas, loading: loadingEscalas } = useEscalas();
   const [showAddEvento, setShowAddEvento] = useState(false);
   const [novoEvento, setNovoEvento] = useState<NovoEventoForm>({ data: '', titulo: '', descricao: '' });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -44,14 +44,19 @@ export default function Dashboard() {
     else setMonth(m => m + 1);
   }
 
-  function handleAddEvento(e: React.FormEvent) {
+  async function handleAddEvento(e: React.FormEvent) {
     e.preventDefault();
     if (!novoEvento.data || !novoEvento.titulo.trim()) return;
-    addEvento(novoEvento.data, novoEvento.titulo.trim(), novoEvento.descricao.trim() || undefined);
-    setNovoEvento({ data: '', titulo: '', descricao: '' });
-    setShowAddEvento(false);
+    try {
+      await addEvento(novoEvento.data, novoEvento.titulo.trim(), novoEvento.descricao.trim() || undefined);
+      setNovoEvento({ data: '', titulo: '', descricao: '' });
+      setShowAddEvento(false);
+    } catch (err) {
+      console.error('Erro ao adicionar evento:', err);
+    }
   }
 
+  const loading = loadingEventos || loadingEscalas;
   const eventosSorted = [...eventos].sort((a, b) => a.data.localeCompare(b.data));
 
   return (
@@ -61,7 +66,7 @@ export default function Dashboard() {
         ano={year}
         onPrevMonth={prevMonth}
         onNextMonth={nextMonth}
-        user={user}
+        user={user ? { email: user.email ?? '', nome: user.email ?? '' } : null}
         onLoginClick={() => navigate('/login')}
         onLogout={logout}
       />
@@ -132,8 +137,15 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Lista de eventos */}
-          {eventosSorted.length === 0 ? (
+          {/* Loading state */}
+          {loading ? (
+            <div
+              className="rounded-2xl p-12 text-center"
+              style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+            >
+              <p className="text-gray-500 font-semibold">Carregando...</p>
+            </div>
+          ) : eventosSorted.length === 0 ? (
             <div
               className="rounded-2xl p-12 text-center"
               style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
@@ -266,7 +278,15 @@ export default function Dashboard() {
                 Cancelar
               </button>
               <button
-                onClick={() => { removeEvento(confirmDelete); refreshEscalas(); setConfirmDelete(null); }}
+                onClick={async () => {
+                  try {
+                    await removeEvento(confirmDelete);
+                    await refreshEscalas();
+                  } catch (err) {
+                    console.error('Erro ao excluir evento:', err);
+                  }
+                  setConfirmDelete(null);
+                }}
                 className="flex-1 rounded-xl py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#EF4444' }}
               >

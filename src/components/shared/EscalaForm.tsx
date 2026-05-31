@@ -13,6 +13,7 @@ interface EscalaFormProps {
   user: { email: string; nome: string } | null;
 }
 
+
 function formatDataEvento(dataISO: string, titulo: string): string {
   const d = new Date(dataISO + 'T00:00:00');
   const dataFmt = d.toLocaleDateString('pt-BR', {

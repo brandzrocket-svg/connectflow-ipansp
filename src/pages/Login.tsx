@@ -15,20 +15,23 @@ export default function Login() {
     return null;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErro('');
     setLoading(true);
 
-    setTimeout(() => {
-      const ok = login(email.trim(), senha);
+    try {
+      const ok = await login(email.trim(), senha);
       if (ok) {
         navigate('/', { replace: true });
       } else {
         setErro('Email ou senha incorretos. Tente novamente.');
       }
+    } catch {
+      setErro('Erro ao tentar fazer login. Tente novamente.');
+    } finally {
       setLoading(false);
-    }, 400);
+    }
   }
 
   return (

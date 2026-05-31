@@ -1,23 +1,32 @@
-import { useState, useEffect } from 'react';
-import { getAuthUser, login as doLogin, logout as doLogout } from '../lib/storage';
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+import type { User } from '@supabase/supabase-js'
 
 export function useAuth() {
-  const [user, setUser] = useState(getAuthUser());
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setUser(getAuthUser());
-  }, []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
 
-  function login(email: string, senha: string): boolean {
-    const ok = doLogin(email, senha);
-    if (ok) setUser(getAuthUser());
-    return ok;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function login(email: string, senha: string): Promise<boolean> {
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
+    return !error
   }
 
-  function logout() {
-    doLogout();
-    setUser(null);
+  async function logout() {
+    await supabase.auth.signOut()
   }
 
-  return { user, login, logout, isAuthenticated: !!user };
+  return { user, login, logout, isAuthenticated: !!user, loading }
 }
