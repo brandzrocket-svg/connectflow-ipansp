@@ -1,32 +1,34 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
-import type { User } from '@supabase/supabase-js'
+import { useState } from 'react'
+
+const SENHA_CORRETA = 'Connect@2026'
+const AUTH_KEY = 'connectflow_auth'
+
+interface AuthUser {
+  nome: string
+  email: string
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const stored = localStorage.getItem(AUTH_KEY)
+    return stored ? JSON.parse(stored) : null
+  })
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function login(email: string, senha: string): Promise<boolean> {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-    return !error
+  function login(_email: string, senha: string): Promise<boolean> {
+    if (senha === SENHA_CORRETA) {
+      const u: AuthUser = { nome: 'Connect IPAN SP', email: 'connect@ipan.com' }
+      localStorage.setItem(AUTH_KEY, JSON.stringify(u))
+      setUser(u)
+      return Promise.resolve(true)
+    }
+    return Promise.resolve(false)
   }
 
-  async function logout() {
-    await supabase.auth.signOut()
+  function logout() {
+    localStorage.removeItem(AUTH_KEY)
+    setUser(null)
+    return Promise.resolve()
   }
 
-  return { user, login, logout, isAuthenticated: !!user, loading }
+  return { user, login, logout, isAuthenticated: !!user, loading: false }
 }
