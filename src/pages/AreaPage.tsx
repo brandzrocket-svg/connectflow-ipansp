@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useEventos } from '../hooks/useEventos';
 import { useEscalas } from '../hooks/useEscalas';
+import { useTheme } from '../hooks/useTheme';
 import Header from '../components/layout/Header';
 import AreaHeader from '../components/area/AreaHeader';
 import EscalaCard from '../components/area/EscalaCard';
@@ -20,6 +21,7 @@ export default function AreaPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(6);
   const area = AREAS.find(a => a.id === slug);
@@ -41,7 +43,7 @@ export default function AreaPage() {
 
   if (!area) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#000000' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center">
           <p className="text-4xl mb-4">🔍</p>
           <p className="text-white font-bold text-lg">Área não encontrada</p>
@@ -112,7 +114,7 @@ export default function AreaPage() {
   const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Header
         mes={month}
         ano={year}
@@ -121,6 +123,8 @@ export default function AreaPage() {
         user={user ? { email: user.email ?? '', nome: user.email ?? '' } : null}
         onLoginClick={() => navigate('/login')}
         onLogout={logout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -159,7 +163,7 @@ export default function AreaPage() {
         {loading ? (
           <div
             className="rounded-2xl p-12 text-center"
-            style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
             <p className="text-gray-500 font-semibold">Carregando...</p>
           </div>
@@ -191,7 +195,7 @@ export default function AreaPage() {
                 <div
                   key={evento.id}
                   className="rounded-2xl p-5 flex items-center justify-between gap-4"
-                  style={{ backgroundColor: '#1A1A1A', border: '1px dashed #333333' }}
+                  style={{ backgroundColor: 'var(--bg-card)', border: '1px dashed var(--border-color)' }}
                 >
                   <div>
                     <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider capitalize">
@@ -229,7 +233,7 @@ export default function AreaPage() {
             {eventosSorted.length === 0 && (
               <div
                 className="rounded-2xl p-12 text-center"
-                style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
               >
                 <p className="text-4xl mb-4">📅</p>
                 <p className="text-gray-400 font-semibold">Nenhum evento neste mês</p>
@@ -270,7 +274,7 @@ export default function AreaPage() {
         >
           <div
             className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-5"
-            style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
             <div>
               <h2 className="text-white font-bold text-lg">Excluir Escala</h2>
@@ -280,7 +284,7 @@ export default function AreaPage() {
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 rounded-xl py-3 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-                style={{ border: '1px solid #333333' }}
+                style={{ border: '1px solid var(--border-color)' }}
               >
                 Cancelar
               </button>

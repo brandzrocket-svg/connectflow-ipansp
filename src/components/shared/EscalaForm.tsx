@@ -84,7 +84,7 @@ export default function EscalaForm({
     >
       <div
         className="w-full max-w-lg rounded-2xl p-6 flex flex-col gap-5 shadow-2xl"
-        style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -114,8 +114,8 @@ export default function EscalaForm({
             onChange={e => setEventoId(e.target.value)}
             className="w-full rounded-xl px-4 py-3 text-white text-sm appearance-none cursor-pointer focus:outline-none"
             style={{
-              backgroundColor: '#2A2A2A',
-              border: '1px solid #333333',
+              backgroundColor: 'var(--bg-card-2)',
+              border: '1px solid var(--border-color)',
             }}
           >
             {eventos.map(ev => (
@@ -140,8 +140,8 @@ export default function EscalaForm({
               placeholder="Nome do voluntário..."
               className="flex-1 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none"
               style={{
-                backgroundColor: '#2A2A2A',
-                border: '1px solid #333333',
+                backgroundColor: 'var(--bg-card-2)',
+                border: '1px solid var(--border-color)',
               }}
             />
             <button
@@ -178,8 +178,8 @@ export default function EscalaForm({
             rows={3}
             className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none resize-none"
             style={{
-              backgroundColor: '#2A2A2A',
-              border: '1px solid #333333',
+              backgroundColor: 'var(--bg-card-2)',
+              border: '1px solid var(--border-color)',
             }}
           />
         </div>
@@ -189,7 +189,7 @@ export default function EscalaForm({
           <button
             onClick={onClose}
             className="flex-1 rounded-xl py-3 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-            style={{ border: '1px solid #333333' }}
+            style={{ border: '1px solid var(--border-color)' }}
           >
             Cancelar
           </button>

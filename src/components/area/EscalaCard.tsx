@@ -26,7 +26,7 @@ export default function EscalaCard({ escala, evento, area, isAuthenticated, onEd
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
@@ -41,7 +41,7 @@ export default function EscalaCard({ escala, evento, area, isAuthenticated, onEd
             <button
               onClick={onEdit}
               className="text-gray-400 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-              style={{ border: '1px solid #333333' }}
+              style={{ border: '1px solid var(--border-color)' }}
             >
               Editar
             </button>
@@ -71,7 +71,7 @@ export default function EscalaCard({ escala, evento, area, isAuthenticated, onEd
       {escala.observacao && (
         <div
           className="rounded-xl px-4 py-3 text-sm text-gray-400"
-          style={{ backgroundColor: '#2A2A2A', border: '1px solid #333333' }}
+          style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
         >
           <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider block mb-1">
             Observação

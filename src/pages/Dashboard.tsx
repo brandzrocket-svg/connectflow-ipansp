@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useEventos } from '../hooks/useEventos';
 import { useEscalas } from '../hooks/useEscalas';
+import { useTheme } from '../hooks/useTheme';
 import Header from '../components/layout/Header';
 import EventoCard from '../components/dashboard/EventoCard';
 import { AREAS } from '../constants/areas';
@@ -21,6 +22,7 @@ interface NovoEventoForm {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!isAuthenticated) navigate('/login', { replace: true });
@@ -64,7 +66,7 @@ export default function Dashboard() {
   const eventosSorted = [...eventos].sort((a, b) => a.data.localeCompare(b.data));
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Header
         mes={month}
         ano={year}
@@ -73,6 +75,8 @@ export default function Dashboard() {
         user={user ? { email: user.email ?? '', nome: user.email ?? '' } : null}
         onLoginClick={() => navigate('/login')}
         onLogout={logout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 flex gap-8">
@@ -80,7 +84,7 @@ export default function Dashboard() {
         <aside className="w-56 flex-shrink-0 hidden lg:block">
           <div
             className="rounded-2xl p-4 sticky top-24"
-            style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
             <p className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-4 px-2">
               Áreas
@@ -133,7 +137,7 @@ export default function Dashboard() {
                 key={area.id}
                 onClick={() => navigate(`/area/${area.id}`)}
                 className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full text-gray-300 hover:text-white transition-colors"
-                style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: area.cor }} />
                 {area.nome}
@@ -145,14 +149,14 @@ export default function Dashboard() {
           {loading ? (
             <div
               className="rounded-2xl p-12 text-center"
-              style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
             >
               <p className="text-gray-500 font-semibold">Carregando...</p>
             </div>
           ) : eventosSorted.length === 0 ? (
             <div
               className="rounded-2xl p-12 text-center"
-              style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
             >
               <p className="text-4xl mb-4">📅</p>
               <p className="text-gray-400 font-semibold">Nenhum evento cadastrado neste mês</p>
@@ -190,7 +194,7 @@ export default function Dashboard() {
         >
           <div
             className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-5"
-            style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
             <div className="flex items-center justify-between">
               <h2 className="text-white font-bold text-lg">Novo Evento</h2>
@@ -210,7 +214,7 @@ export default function Dashboard() {
                   onChange={e => setNovoEvento(p => ({ ...p, data: e.target.value }))}
                   required
                   className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none"
-                  style={{ backgroundColor: '#2A2A2A', border: '1px solid #333333', colorScheme: 'dark' }}
+                  style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -222,7 +226,7 @@ export default function Dashboard() {
                   placeholder="Ex: Culto Regular"
                   required
                   className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none"
-                  style={{ backgroundColor: '#2A2A2A', border: '1px solid #333333' }}
+                  style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -233,7 +237,7 @@ export default function Dashboard() {
                   onChange={e => setNovoEvento(p => ({ ...p, descricao: e.target.value }))}
                   placeholder="Ex: Domingo, Especial..."
                   className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none"
-                  style={{ backgroundColor: '#2A2A2A', border: '1px solid #333333' }}
+                  style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
                 />
               </div>
               <div className="flex gap-3 pt-1">
@@ -241,7 +245,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setShowAddEvento(false)}
                   className="flex-1 rounded-xl py-3 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-                  style={{ border: '1px solid #333333' }}
+                  style={{ border: '1px solid var(--border-color)' }}
                 >
                   Cancelar
                 </button>
@@ -267,7 +271,7 @@ export default function Dashboard() {
         >
           <div
             className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-5"
-            style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
             <div>
               <h2 className="text-white font-bold text-lg">Excluir Evento</h2>
@@ -277,7 +281,7 @@ export default function Dashboard() {
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 rounded-xl py-3 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-                style={{ border: '1px solid #333333' }}
+                style={{ border: '1px solid var(--border-color)' }}
               >
                 Cancelar
               </button>

@@ -30,7 +30,7 @@ export default function Login() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ backgroundColor: '#000000' }}
+      style={{ backgroundColor: 'var(--bg-primary)' }}
     >
       <div className="w-full max-w-sm flex flex-col gap-8">
         <div className="text-center">
@@ -44,7 +44,7 @@ export default function Login() {
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-4 rounded-2xl p-6"
-          style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
         >
           <h2 className="text-white font-bold text-lg text-center">Acesso da Equipe</h2>
 
@@ -70,7 +70,7 @@ export default function Login() {
               autoComplete="current-password"
               autoFocus
               className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none"
-              style={{ backgroundColor: '#2A2A2A', border: '1px solid #333333' }}
+              style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
             />
           </div>
 

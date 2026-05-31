@@ -25,7 +25,7 @@ export default function EventoCard({ evento, escalas, areas }: EventoCardProps) 
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ backgroundColor: '#1A1A1A', border: '1px solid #333333' }}
+      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
     >
       {/* Header do evento */}
       <div className="flex items-start justify-between gap-3">
@@ -51,7 +51,7 @@ export default function EventoCard({ evento, escalas, areas }: EventoCardProps) 
             <div
               key={area.id}
               className="flex items-start gap-3 py-2 border-t"
-              style={{ borderColor: '#2A2A2A' }}
+              style={{ borderColor: 'var(--bg-card-2)' }}
             >
               <div className="flex items-center gap-2 min-w-[160px] flex-shrink-0">
                 <span
@@ -66,7 +66,7 @@ export default function EventoCard({ evento, escalas, areas }: EventoCardProps) 
                     <span
                       key={v}
                       className="text-xs text-gray-300 px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: '#2A2A2A' }}
+                      style={{ backgroundColor: 'var(--bg-card-2)' }}
                     >
                       {v}
                     </span>
