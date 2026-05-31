@@ -10,9 +10,8 @@ interface EscalaFormProps {
   escalaExistente?: Escala;
   onSave: (data: Omit<Escala, 'id' | 'atualizado_em'>) => void;
   onClose: () => void;
-  user: { email: string; nome: string } | null;
+  user: { email: string } | null;
 }
-
 
 function formatDataEvento(dataISO: string, titulo: string): string {
   const d = new Date(dataISO + 'T00:00:00');
@@ -38,11 +37,10 @@ export default function EscalaForm({
   const [voluntarios, setVoluntarios] = useState<string[]>(escalaExistente?.voluntarios ?? []);
   const [novoVoluntario, setNovoVoluntario] = useState('');
   const [observacao, setObservacao] = useState(escalaExistente?.observacao ?? '');
+  const cor = areaCor === '#FFFFFF' ? '#555555' : areaCor;
 
   useEffect(() => {
-    if (!eventoId && eventos.length > 0) {
-      setEventoId(eventos[0].id);
-    }
+    if (!eventoId && eventos.length > 0) setEventoId(eventos[0].id);
   }, [eventos, eventoId]);
 
   function adicionarVoluntario() {
@@ -58,10 +56,7 @@ export default function EscalaForm({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      adicionarVoluntario();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); adicionarVoluntario(); }
   }
 
   function handleSave() {
@@ -78,27 +73,30 @@ export default function EscalaForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-lg rounded-2xl p-6 flex flex-col gap-5 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl p-6 flex flex-col gap-5 shadow-2xl modal-content"
         style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-white font-bold text-lg">
+            <h2 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
               {escalaExistente ? 'Editar Escala' : 'Nova Escala'}
             </h2>
-            <p className="text-sm mt-0.5" style={{ color: areaCor }}>
+            <p className="text-sm mt-0.5" style={{ color: cor }}>
               {areaNome}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-xl"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-xl transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--bg-card-2)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
             ×
           </button>
@@ -106,16 +104,17 @@ export default function EscalaForm({
 
         {/* Evento */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">
+          <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
             Evento
           </label>
           <select
             value={eventoId}
             onChange={e => setEventoId(e.target.value)}
-            className="w-full rounded-xl px-4 py-3 text-white text-sm appearance-none cursor-pointer focus:outline-none"
+            className="w-full rounded-xl px-4 py-3 text-sm appearance-none cursor-pointer focus:outline-none"
             style={{
               backgroundColor: 'var(--bg-card-2)',
               border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
             }}
           >
             {eventos.map(ev => (
@@ -128,7 +127,7 @@ export default function EscalaForm({
 
         {/* Voluntários */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">
+          <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
             Voluntários
           </label>
           <div className="flex gap-2">
@@ -138,16 +137,17 @@ export default function EscalaForm({
               onChange={e => setNovoVoluntario(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Nome do voluntário..."
-              className="flex-1 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none"
+              className="flex-1 rounded-xl px-4 py-3 text-sm focus:outline-none"
               style={{
                 backgroundColor: 'var(--bg-card-2)',
                 border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
               }}
             />
             <button
               onClick={adicionarVoluntario}
-              className="rounded-xl px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-80"
-              style={{ backgroundColor: areaCor === '#FFFFFF' ? '#555555' : areaCor }}
+              className="rounded-xl px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-80"
+              style={{ backgroundColor: cor, color: '#fff' }}
             >
               + Adicionar
             </button>
@@ -158,7 +158,7 @@ export default function EscalaForm({
                 <VoluntarioTag
                   key={nome}
                   nome={nome}
-                  cor={areaCor === '#FFFFFF' ? '#888888' : areaCor}
+                  cor={cor}
                   onRemove={() => removerVoluntario(nome)}
                 />
               ))}
@@ -168,7 +168,7 @@ export default function EscalaForm({
 
         {/* Observações */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">
+          <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
             Observações
           </label>
           <textarea
@@ -176,10 +176,11 @@ export default function EscalaForm({
             onChange={e => setObservacao(e.target.value)}
             placeholder="Notas, instruções especiais..."
             rows={3}
-            className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none resize-none"
+            className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"
             style={{
               backgroundColor: 'var(--bg-card-2)',
               border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
             }}
           />
         </div>
@@ -188,8 +189,8 @@ export default function EscalaForm({
         <div className="flex gap-3 pt-1">
           <button
             onClick={onClose}
-            className="flex-1 rounded-xl py-3 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-            style={{ border: '1px solid var(--border-color)' }}
+            className="flex-1 rounded-xl py-3 text-sm font-semibold transition-colors"
+            style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
           >
             Cancelar
           </button>
@@ -197,10 +198,7 @@ export default function EscalaForm({
             onClick={handleSave}
             disabled={!eventoId}
             className="flex-1 rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
-            style={{
-              backgroundColor: areaCor === '#FFFFFF' ? '#555555' : areaCor,
-              color: areaCor === '#FFFFFF' ? '#ffffff' : '#000000',
-            }}
+            style={{ backgroundColor: cor, color: '#fff' }}
           >
             Salvar
           </button>

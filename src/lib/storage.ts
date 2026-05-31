@@ -101,7 +101,8 @@ export async function getVoluntariosByArea(areaId: string): Promise<Voluntario[]
 }
 
 export async function createVoluntario(v: Omit<Voluntario, 'id' | 'criado_em'>): Promise<void> {
-  await supabase.from('voluntarios').insert({ ...v, criado_em: new Date().toISOString() })
+  const { error } = await supabase.from('voluntarios').insert({ ...v, criado_em: new Date().toISOString() })
+  if (error) throw error
 }
 
 export async function deleteVoluntario(id: string): Promise<void> {

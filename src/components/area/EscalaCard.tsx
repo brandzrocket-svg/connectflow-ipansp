@@ -26,29 +26,45 @@ export default function EscalaCard({ escala, evento, area, isAuthenticated, onEd
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        border: '1px solid var(--border-color)',
+        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.18)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = '';
+      }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider capitalize">
+          <p className="text-xs font-semibold uppercase tracking-wider capitalize" style={{ color: 'var(--text-secondary)' }}>
             {formatData(evento.data)}
           </p>
-          <h3 className="text-white font-bold text-base mt-0.5">{evento.titulo}</h3>
+          <h3 className="font-bold text-base mt-0.5" style={{ color: 'var(--text-primary)' }}>
+            {evento.titulo}
+          </h3>
         </div>
         {isAuthenticated && (
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={onEdit}
-              className="text-gray-400 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-              style={{ border: '1px solid var(--border-color)' }}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
             >
               Editar
             </button>
             <button
               onClick={onDelete}
-              className="text-red-400 hover:text-red-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-              style={{ border: '1px solid rgba(239,68,68,0.3)' }}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              style={{ color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' }}
             >
               Excluir
             </button>
@@ -64,16 +80,20 @@ export default function EscalaCard({ escala, evento, area, isAuthenticated, onEd
           ))}
         </div>
       ) : (
-        <p className="text-gray-600 text-sm italic">Nenhum voluntário adicionado</p>
+        <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>Nenhum voluntário adicionado</p>
       )}
 
       {/* Observação */}
       {escala.observacao && (
         <div
-          className="rounded-xl px-4 py-3 text-sm text-gray-400"
-          style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{
+            backgroundColor: 'var(--bg-card-2)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-secondary)',
+          }}
         >
-          <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider block mb-1">
+          <span className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
             Observação
           </span>
           {escala.observacao}
@@ -82,7 +102,7 @@ export default function EscalaCard({ escala, evento, area, isAuthenticated, onEd
 
       {/* Data de atualização */}
       {escala.atualizado_em && (
-        <p className="text-gray-600 text-xs">
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Atualizado em{' '}
           {new Date(escala.atualizado_em).toLocaleDateString('pt-BR', {
             day: '2-digit',

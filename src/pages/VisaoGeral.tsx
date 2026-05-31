@@ -86,7 +86,7 @@ function RankingSection({ escalas }: { escalas: Escala[] }) {
       {top.length === 0 ? (
         <p className="text-gray-500 text-sm italic">Nenhuma escala registrada ainda.</p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 stagger">
           {top.map(([nome, info], i) => {
             // determina a cor da área onde mais serviu
             const topAreaId = Object.entries(info.areas).sort(([,a],[,b]) => b - a)[0]?.[0];
@@ -252,7 +252,7 @@ function ProximosEventos({ escalas }: { escalas: Escala[] }) {
 
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto pb-2"
+        className="flex gap-3 overflow-x-auto pb-3 scroll-x"
         style={{ scrollbarWidth: 'thin' }}
       >
         {exibir.length === 0 ? (
@@ -279,8 +279,10 @@ function ProximosEventos({ escalas }: { escalas: Escala[] }) {
             return (
               <div
                 key={ev.id}
-                className="flex-shrink-0 w-44 rounded-2xl p-4 flex flex-col gap-2 transition-all"
+                className="flex-shrink-0 rounded-2xl p-4 flex flex-col gap-2 transition-all"
                 style={{
+                  minWidth: '180px',
+                  width: '180px',
                   backgroundColor: 'var(--bg-card-2)',
                   border: isDestaque
                     ? '1.5px solid rgba(255,255,255,0.5)'
@@ -399,7 +401,7 @@ function CalendarioIgreja() {
       {/* Grid dos dias da semana */}
       <div className="grid grid-cols-7 gap-0.5">
         {DIAS_SEMANA_CURTO.map(d => (
-          <div key={d} className="text-center text-gray-600 text-xs font-semibold py-1">
+          <div key={d} className="text-center text-gray-600 text-[10px] sm:text-xs font-semibold py-1 truncate">
             {d}
           </div>
         ))}
@@ -415,7 +417,7 @@ function CalendarioIgreja() {
           return (
             <div
               key={dia}
-              className="rounded-lg p-1 min-h-[56px] flex flex-col gap-0.5"
+              className="rounded-lg p-1 min-h-[48px] sm:min-h-[56px] flex flex-col gap-0.5 overflow-hidden"
               style={{
                 backgroundColor: isHoje ? 'rgba(255,255,255,0.06)' : 'var(--bg-card-2)',
                 border: isHoje ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
@@ -486,7 +488,7 @@ export default function VisaoGeral() {
         onToggleTheme={toggleTheme}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
         {/* Botão voltar */}
         <button
           onClick={() => navigate('/')}

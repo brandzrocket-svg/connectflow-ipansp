@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -19,11 +20,19 @@ const MESES_PT = [
 
 export default function Header({ mes, ano, onPrevMonth, onNextMonth, user, onLoginClick, onLogout, theme, onToggleTheme }: HeaderProps) {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  function closeMenu() { setMenuOpen(false); }
+
+  function handleNav(path: string) {
+    closeMenu();
+    navigate(path);
+  }
 
   return (
     <header
-      style={{ backgroundColor: 'var(--header-bg)', borderBottom: '1px solid var(--border-color)' }}
       className="sticky top-0 z-50 w-full px-6 py-4"
+      style={{ backgroundColor: 'var(--header-bg)', borderBottom: '1px solid var(--border-color)' }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Logo */}
@@ -32,52 +41,62 @@ export default function Header({ mes, ano, onPrevMonth, onNextMonth, user, onLog
           className="flex items-center cursor-pointer bg-transparent border-0 p-0"
         >
           <span className="text-2xl tracking-tight select-none">
-            <span style={{ color: 'var(--text-primary)' }} className="font-light">connect</span>
-            <span style={{ color: 'var(--text-primary)' }} className="font-black">ipan</span>
+            <span className="font-light" style={{ color: 'var(--text-primary)' }}>connect</span>
+            <span className="font-black" style={{ color: 'var(--text-primary)' }}>ipan</span>
           </span>
         </button>
 
-        {/* Month Navigator */}
-        <div className="flex items-center gap-3">
+        {/* Desktop: Month Navigator */}
+        <div className="hidden lg:flex items-center gap-2">
           <button
             onClick={onPrevMonth}
-            className="text-gray-500 hover:text-white transition-colors duration-150 text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10"
+            className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
             aria-label="Mês anterior"
           >
             ‹
           </button>
-          <span className="text-white font-semibold text-sm tracking-widest uppercase min-w-[140px] text-center">
+          <span className="font-semibold text-sm tracking-widest uppercase min-w-[140px] text-center" style={{ color: 'var(--text-primary)' }}>
             {MESES_PT[mes - 1]} {ano}
           </span>
           <button
             onClick={onNextMonth}
-            className="text-gray-500 hover:text-white transition-colors duration-150 text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10"
+            className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
             aria-label="Próximo mês"
           >
             ›
           </button>
         </div>
 
-        {/* Auth + Theme toggle */}
-        <div className="flex items-center gap-3">
-          {/* Theme toggle button */}
+        {/* Desktop: Theme + Auth */}
+        <div className="hidden lg:flex items-center gap-2">
           <button
             onClick={onToggleTheme}
             title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-            className="text-gray-400 hover:text-white text-sm w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
+            className="text-sm w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--bg-card-2)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
           {user ? (
             <>
-              <span className="text-gray-400 text-sm hidden sm:block">
+              <span className="text-sm hidden sm:block" style={{ color: 'var(--text-secondary)' }}>
                 {user.nome}
               </span>
               <button
                 onClick={onLogout}
-                style={{ borderColor: 'var(--border-color)' }}
-                className="text-gray-400 hover:text-white text-sm border rounded-lg px-3 py-1.5 transition-colors duration-150 hover:border-white/40"
+                className="text-sm rounded-lg px-3 py-1.5 transition-colors"
+                style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
               >
                 Sair
               </button>
@@ -85,13 +104,145 @@ export default function Header({ mes, ano, onPrevMonth, onNextMonth, user, onLog
           ) : (
             <button
               onClick={onLoginClick}
-              style={{ borderColor: 'var(--border-color)' }}
-              className="text-gray-400 hover:text-white text-sm border rounded-lg px-3 py-1.5 transition-colors duration-150 hover:border-white/40"
+              className="text-sm rounded-lg px-3 py-1.5 transition-colors"
+              style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
             >
               Entrar
             </button>
           )}
         </div>
+
+        {/* Mobile: Hamburger */}
+        <button
+          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <line x1="3" y1="5" x2="17" y2="5" />
+            <line x1="3" y1="10" x2="17" y2="10" />
+            <line x1="3" y1="15" x2="17" y2="15" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile overlay */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={closeMenu}
+        />
+      )}
+
+      {/* Mobile slide-in panel */}
+      <div
+        className="fixed top-0 right-0 bottom-0 z-50 w-72 flex flex-col p-6 gap-4 lg:hidden"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          borderLeft: '1px solid var(--border-color)',
+          transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.28s ease',
+        }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xl tracking-tight select-none">
+            <span className="font-light" style={{ color: 'var(--text-primary)' }}>connect</span>
+            <span className="font-black" style={{ color: 'var(--text-primary)' }}>ipan</span>
+          </span>
+          <button
+            onClick={closeMenu}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-xl transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Month Navigator */}
+        <div
+          className="flex items-center justify-between rounded-xl px-4 py-3"
+          style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
+        >
+          <button
+            onClick={onPrevMonth}
+            className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Mês anterior"
+          >
+            ‹
+          </button>
+          <span className="font-semibold text-xs tracking-widest uppercase text-center" style={{ color: 'var(--text-primary)' }}>
+            {MESES_PT[mes - 1]} {ano}
+          </span>
+          <button
+            onClick={onNextMonth}
+            className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Próximo mês"
+          >
+            ›
+          </button>
+        </div>
+
+        {/* Nav links */}
+        <nav className="flex flex-col gap-1">
+          {[
+            { path: '/', label: '📋 Dashboard' },
+            { path: '/visao-geral', label: '📊 Visão Geral' },
+            { path: '/sobre', label: 'ℹ️ Sobre o Ministério' },
+          ].map(({ path, label }) => (
+            <button
+              key={path}
+              onClick={() => handleNav(path)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-semibold transition-all"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <div style={{ borderTop: '1px solid var(--border-color)' }} />
+
+        {/* Theme toggle */}
+        <button
+          onClick={onToggleTheme}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+        </button>
+
+        {/* Auth */}
+        {user ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs px-4 truncate" style={{ color: 'var(--text-muted)' }}>{user.nome}</p>
+            <button
+              onClick={() => { onLogout(); closeMenu(); }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left"
+              style={{ color: '#EF4444' }}
+            >
+              Sair
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => { onLoginClick(); closeMenu(); }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Entrar
+          </button>
+        )}
       </div>
     </header>
   );
