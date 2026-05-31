@@ -31,6 +31,10 @@ export default function AreaPage() {
   const [todosEventos, setTodosEventos] = useState<Evento[]>([]);
 
   useEffect(() => {
+    if (!isAuthenticated) navigate('/login', { replace: true });
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
     refreshEventos();
     getEventosByMonth(year, month).then(setTodosEventos).catch(console.error);
   }, [refreshEventos, year, month]);

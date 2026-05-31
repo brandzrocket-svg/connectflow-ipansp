@@ -21,6 +21,10 @@ interface NovoEventoForm {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) navigate('/login', { replace: true });
+  }, [isAuthenticated, navigate]);
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(6);
   const { eventos, addEvento, removeEvento, refresh: refreshEventos, loading: loadingEventos } = useEventos(year, month);
