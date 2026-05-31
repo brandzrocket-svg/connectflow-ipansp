@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Evento, Escala } from '../types'
+import type { Evento, Escala, Report, Voluntario } from '../types'
 
 export async function getEventosByMonth(year: number, month: number): Promise<Evento[]> {
   const from = `${year}-${String(month).padStart(2, '0')}-01`
@@ -69,4 +69,41 @@ export async function upsertEscala(escala: Omit<Escala, 'id' | 'atualizado_em'>)
 export async function deleteEscala(id: string): Promise<void> {
   const { error } = await supabase.from('escalas').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function getReports(): Promise<Report[]> {
+  const { data, error } = await supabase
+    .from('reports')
+    .select('*')
+    .order('criado_em', { ascending: false })
+    .limit(20)
+  if (error) return []
+  return data ?? []
+}
+
+export async function createReport(report: Omit<Report, 'id' | 'criado_em' | 'lido'>): Promise<void> {
+  await supabase.from('reports').insert({ ...report, lido: false })
+}
+
+export async function marcarReportLido(id: string): Promise<void> {
+  await supabase.from('reports').update({ lido: true }).eq('id', id)
+}
+
+export async function getVoluntariosByArea(areaId: string): Promise<Voluntario[]> {
+  const { data, error } = await supabase
+    .from('voluntarios')
+    .select('*')
+    .eq('area_id', areaId)
+    .eq('ativo', true)
+    .order('nome', { ascending: true })
+  if (error) return []
+  return data ?? []
+}
+
+export async function createVoluntario(v: Omit<Voluntario, 'id' | 'criado_em'>): Promise<void> {
+  await supabase.from('voluntarios').insert({ ...v, criado_em: new Date().toISOString() })
+}
+
+export async function deleteVoluntario(id: string): Promise<void> {
+  await supabase.from('voluntarios').update({ ativo: false }).eq('id', id)
 }

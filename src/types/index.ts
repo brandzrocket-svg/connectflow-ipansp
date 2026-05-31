@@ -27,3 +27,29 @@ export interface EscalaComDetalhes extends Escala {
   evento: Evento;
   area: Area;
 }
+
+export interface Report {
+  id: string;
+  area_id: string;
+  mensagem: string;
+  criado_por?: string;
+  criado_em: string;
+  lido: boolean;
+}
+
+export interface EventoCalendario {
+  id: string;
+  data: string; // ISO "2026-06-07"
+  titulo: string;
+  tipo: 'culto_regular' | 'santa_ceia' | 'especial' | 'semanal';
+  horario?: string;
+  descricao?: string;
+}
+
+export interface Voluntario {
+  id: string;
+  area_id: string;
+  nome: string;
+  ativo: boolean;
+  criado_em: string;
+}

@@ -86,6 +86,20 @@ export default function Dashboard() {
             className="rounded-2xl p-4 sticky top-24"
             style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
+            <button
+              onClick={() => navigate('/visao-geral')}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-bold transition-all duration-150 mb-2 w-full"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)' }}
+            >
+              📊 Visão Geral
+            </button>
+            <button
+              onClick={() => navigate('/sobre')}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-all duration-150 mb-3 w-full"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              ℹ️ Sobre o Ministério
+            </button>
             <p className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-4 px-2">
               Áreas
             </p>
@@ -132,6 +146,20 @@ export default function Dashboard() {
 
           {/* Mobile: área links */}
           <div className="lg:hidden flex gap-2 flex-wrap mb-6">
+            <button
+              onClick={() => navigate('/visao-geral')}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full text-white transition-colors"
+              style={{ backgroundColor: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)' }}
+            >
+              📊 Visão Geral
+            </button>
+            <button
+              onClick={() => navigate('/sobre')}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full text-gray-300 hover:text-white transition-colors"
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            >
+              ℹ️ Sobre
+            </button>
             {AREAS.map(area => (
               <button
                 key={area.id}

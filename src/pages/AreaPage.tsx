@@ -4,13 +4,14 @@ import { useAuth } from '../hooks/useAuth';
 import { useEventos } from '../hooks/useEventos';
 import { useEscalas } from '../hooks/useEscalas';
 import { useTheme } from '../hooks/useTheme';
+import { useVoluntarios } from '../hooks/useVoluntarios';
 import Header from '../components/layout/Header';
 import AreaHeader from '../components/area/AreaHeader';
 import EscalaCard from '../components/area/EscalaCard';
 import EscalaForm from '../components/shared/EscalaForm';
 import { AREAS } from '../constants/areas';
 import type { Escala, Evento } from '../types';
-import { getEventosByMonth } from '../lib/storage';
+import { getEventosByMonth, createReport } from '../lib/storage';
 
 const MESES_PT = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -27,10 +28,16 @@ export default function AreaPage() {
   const area = AREAS.find(a => a.id === slug);
   const { eventos, refresh: refreshEventos, loading: loadingEventos } = useEventos(year, month);
   const { escalas, saveEscala, removeEscala, refresh: refreshEscalas, loading: loadingEscalas } = useEscalas(area?.id);
+  const { voluntarios, addVoluntario, removeVoluntario } = useVoluntarios(area?.id ?? '');
   const [showForm, setShowForm] = useState(false);
   const [escalaEditando, setEscalaEditando] = useState<Escala | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [todosEventos, setTodosEventos] = useState<Evento[]>([]);
+  const [reportMensagem, setReportMensagem] = useState('');
+  const [reportEnviado, setReportEnviado] = useState(false);
+  const [reportEnviando, setReportEnviando] = useState(false);
+  const [novoVoluntario, setNovoVoluntario] = useState('');
+  const [adicionandoVoluntario, setAdicionandoVoluntario] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) navigate('/login', { replace: true });
@@ -112,6 +119,35 @@ export default function AreaPage() {
   );
 
   const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
+
+  async function handleAddVoluntario(e: React.FormEvent) {
+    e.preventDefault()
+    const nome = novoVoluntario.trim()
+    if (!nome) return
+    setAdicionandoVoluntario(true)
+    await addVoluntario(nome)
+    setNovoVoluntario('')
+    setAdicionandoVoluntario(false)
+  }
+
+  async function handleEnviarReport(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reportMensagem.trim() || !isAuthenticated || !area) return;
+    setReportEnviando(true);
+    try {
+      await createReport({
+        area_id: area!.id,
+        mensagem: reportMensagem.trim(),
+        criado_por: user?.email ?? 'anon',
+      });
+      setReportMensagem('');
+      setReportEnviado(true);
+      setTimeout(() => setReportEnviado(false), 3000);
+    } catch (err) {
+      console.error('Erro ao enviar report:', err);
+    }
+    setReportEnviando(false);
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -240,6 +276,114 @@ export default function AreaPage() {
                 <p className="text-gray-600 text-sm mt-1">Navegue para outro mês ou cadastre eventos no Dashboard</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Seção de Voluntários */}
+        <div className="mt-8 rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cor }} />
+            <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+              Voluntários da Área
+            </h3>
+            <span className="text-xs ml-auto" style={{ color: 'var(--text-secondary)' }}>
+              {voluntarios.length} cadastrado{voluntarios.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* Lista */}
+          <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
+            {voluntarios.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Nenhum voluntário cadastrado.</p>
+            ) : voluntarios.map(v => (
+              <div
+                key={v.id}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cor }} />
+                {v.nome}
+                {isAuthenticated && (
+                  <button
+                    onClick={() => removeVoluntario(v.id)}
+                    className="ml-1 text-gray-500 hover:text-red-400 transition-colors text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Form de adição */}
+          {isAuthenticated && (
+            <form onSubmit={handleAddVoluntario} className="flex gap-2">
+              <input
+                type="text"
+                value={novoVoluntario}
+                onChange={e => setNovoVoluntario(e.target.value)}
+                placeholder="Nome do voluntário..."
+                className="flex-1 rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+              />
+              <button
+                type="submit"
+                disabled={adicionandoVoluntario || !novoVoluntario.trim()}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-black disabled:opacity-50 transition-opacity hover:opacity-90"
+                style={{ backgroundColor: cor }}
+              >
+                + Adicionar
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Seção: Reportar para o Líder */}
+        {isAuthenticated && (
+          <div
+            className="mt-10 rounded-2xl p-5 flex flex-col gap-4"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              border: `1px solid ${cor}40`,
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: cor }}
+              />
+              <h2 className="text-white font-black text-sm tracking-widest uppercase">
+                Reportar para o Líder
+              </h2>
+            </div>
+            <form onSubmit={handleEnviarReport} className="flex flex-col gap-3">
+              <textarea
+                value={reportMensagem}
+                onChange={e => setReportMensagem(e.target.value)}
+                placeholder="Descreva uma observação, necessidade ou ocorrência desta área..."
+                rows={3}
+                className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none resize-none"
+                style={{
+                  backgroundColor: 'var(--bg-card-2)',
+                  border: `1px solid ${cor}30`,
+                }}
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={!reportMensagem.trim() || reportEnviando}
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: cor, color: area.cor === '#FFFFFF' ? '#111' : '#000' }}
+                >
+                  {reportEnviando ? 'Enviando...' : 'Enviar Report'}
+                </button>
+                {reportEnviado && (
+                  <span className="text-green-400 text-sm font-semibold animate-pulse">
+                    Report enviado com sucesso!
+                  </span>
+                )}
+              </div>
+            </form>
           </div>
         )}
       </div>
