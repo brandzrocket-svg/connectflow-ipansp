@@ -114,8 +114,9 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
       setExpandedId(null);
     } catch (err: unknown) {
       console.error('Erro ao salvar escala:', err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setSaveError(msg || 'Erro ao salvar. Verifique as configurações do Supabase.');
+      const e = err as { message?: string; details?: string; code?: string };
+      const msg = e?.message || e?.details || 'Erro ao salvar. Tente novamente.';
+      setSaveError(msg);
     } finally {
       setSaving(null);
     }

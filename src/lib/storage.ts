@@ -63,12 +63,28 @@ export async function getEscalasByEvento(eventoId: string): Promise<Escala[]> {
 }
 
 export async function upsertEscala(escala: Omit<Escala, 'id' | 'atualizado_em'>): Promise<Escala> {
+  // Check if a record already exists for this (evento_id, area_id) pair
+  const { data: existing } = await supabase
+    .from('escalas')
+    .select('id')
+    .eq('evento_id', escala.evento_id)
+    .eq('area_id', escala.area_id)
+    .maybeSingle()
+
+  if (existing?.id) {
+    const { data, error } = await supabase
+      .from('escalas')
+      .update({ ...escala, atualizado_em: new Date().toISOString() })
+      .eq('id', existing.id)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  }
+
   const { data, error } = await supabase
     .from('escalas')
-    .upsert(
-      { ...escala, atualizado_em: new Date().toISOString() },
-      { onConflict: 'evento_id,area_id' }
-    )
+    .insert({ ...escala, atualizado_em: new Date().toISOString() })
     .select()
     .single()
   if (error) throw error
