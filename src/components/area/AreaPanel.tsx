@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { useEventos } from '../../hooks/useEventos';
 import { useEscalas } from '../../hooks/useEscalas';
 import { useVoluntarios } from '../../hooks/useVoluntarios';
 import EscalaCard from './EscalaCard';
 import EscalaForm from '../shared/EscalaForm';
-import type { Area, Escala, Evento } from '../../types';
+import type { Area, Escala } from '../../types';
 import { createReport } from '../../lib/storage';
 
 const MESES_PT = [
@@ -15,12 +16,12 @@ interface AreaPanelProps {
   area: Area;
   year: number;
   month: number;
-  eventos: Evento[];
   isAuthenticated: boolean;
   user: { email: string } | null;
 }
 
-export default function AreaPanel({ area, year, month, eventos, isAuthenticated, user }: AreaPanelProps) {
+export default function AreaPanel({ area, year, month, isAuthenticated, user }: AreaPanelProps) {
+  const { eventos, loading: loadingEventos } = useEventos(year, month);
   const { escalas, saveEscala, removeEscala, refresh: refreshEscalas, loading: loadingEscalas } = useEscalas(area.id);
   const { voluntarios, error: voluntarioError, addVoluntario, removeVoluntario } = useVoluntarios(area.id);
   const [showForm, setShowForm] = useState(false);
@@ -44,6 +45,8 @@ export default function AreaPanel({ area, year, month, eventos, isAuthenticated,
   const eventosSemEscala = eventosSorted.filter(
     ev => !escalas.some(e => e.evento_id === ev.id)
   );
+
+  const loading = loadingEventos || loadingEscalas;
 
   async function handleAddVoluntario(e: React.FormEvent) {
     e.preventDefault();
@@ -91,17 +94,17 @@ export default function AreaPanel({ area, year, month, eventos, isAuthenticated,
           <button
             onClick={() => { setEscalaEditando(undefined); setShowForm(true); }}
             className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
-            style={{ backgroundColor: cor, color: area.cor === '#FFFFFF' ? '#000' : '#000' }}
+            style={{ backgroundColor: cor, color: '#000' }}
           >
             + Adicionar Escala
           </button>
         )}
       </div>
 
-      {/* Escalas */}
-      {loadingEscalas ? (
+      {/* Escalas / Events list */}
+      {loading ? (
         <div className="flex flex-col gap-3">
-          {[1, 2].map(i => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="skeleton rounded-2xl h-24" style={{ animationDelay: `${i * 0.1}s` }} />
           ))}
         </div>
@@ -249,11 +252,7 @@ export default function AreaPanel({ area, year, month, eventos, isAuthenticated,
               placeholder="Descreva uma observação, necessidade ou ocorrência desta área..."
               rows={3}
               className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"
-              style={{
-                backgroundColor: 'var(--bg-card-2)',
-                border: `1px solid ${cor}30`,
-                color: 'var(--text-primary)',
-              }}
+              style={{ backgroundColor: 'var(--bg-card-2)', border: `1px solid ${cor}30`, color: 'var(--text-primary)' }}
             />
             <div className="flex items-center gap-3">
               <button

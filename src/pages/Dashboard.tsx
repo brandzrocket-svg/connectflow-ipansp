@@ -166,10 +166,10 @@ export default function Dashboard() {
                 Escalas de Produção
               </button>
               <AreaPanel
+                key={selectedAreaId}
                 area={selectedArea}
                 year={year}
                 month={month}
-                eventos={eventosSorted}
                 isAuthenticated={isAuthenticated}
                 user={user ? { email: user.email ?? '' } : null}
               />
