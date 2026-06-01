@@ -412,24 +412,6 @@ function WelcomeHome({ onNavigate, voluntariosCount }: { onNavigate: (v: string)
         </div>
       </div>
 
-      {/* ── Stats row ── */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Áreas', value: '8', sub: 'no ministério' },
-          { label: 'Eventos Jun', value: '9', sub: 'neste mês' },
-          { label: 'Módulos', value: '3', sub: 'disponíveis' },
-        ].map(({ label, value, sub }) => (
-          <div
-            key={label}
-            className="rounded-2xl p-5"
-            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-          >
-            <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
-            <p className="font-black text-3xl leading-none" style={{ color: 'var(--text-primary)' }}>{value}</p>
-            <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{sub}</p>
-          </div>
-        ))}
-      </div>
 
       {/* ── Versículo ── */}
       <div
