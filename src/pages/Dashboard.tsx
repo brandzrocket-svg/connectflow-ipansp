@@ -102,24 +102,29 @@ export default function Dashboard() {
 
         {/* Navigation — scrollable */}
         <nav className="flex-1 overflow-y-auto px-3 py-1 flex flex-col gap-0.5">
-          {/* Main section */}
+          {/* Módulos */}
           <p className="text-[9px] font-bold uppercase tracking-widest px-2 pt-1 pb-2" style={{ color: 'var(--text-muted)' }}>
             Módulos
           </p>
-          {[
-            { id: 'escalas',     icon: '📅', label: 'Escalas'      },
-            { id: 'visao-geral', icon: '📊', label: 'Visão Geral'  },
-            { id: 'sobre',       icon: 'ℹ️',  label: 'Sobre'        },
-          ].map(({ id, icon, label }) => (
-            <NavBtn key={id} id={id} icon={icon} label={label} currentView={view} onNav={navTo} />
-          ))}
+          <NavBtn id="visao-geral" icon="📊" label="Visão Geral" currentView={view} onNav={navTo} />
 
-          {/* Areas section */}
+          {/* Áreas */}
           <p className="text-[9px] font-bold uppercase tracking-widest px-2 pt-4 pb-2" style={{ color: 'var(--text-muted)' }}>
             Áreas
           </p>
           {AREAS.map(area => (
             <NavBtn key={area.id} id={area.id} label={area.nome} currentView={view} onNav={navTo} area={area} />
+          ))}
+
+          {/* Conteúdo */}
+          <p className="text-[9px] font-bold uppercase tracking-widest px-2 pt-4 pb-2" style={{ color: 'var(--text-muted)' }}>
+            Conteúdo
+          </p>
+          {[
+            { id: 'escalas', icon: '📅', label: 'Escalas' },
+            { id: 'sobre',   icon: 'ℹ️',  label: 'Sobre'   },
+          ].map(({ id, icon, label }) => (
+            <NavBtn key={id} id={id} icon={icon} label={label} currentView={view} onNav={navTo} />
           ))}
         </nav>
 
