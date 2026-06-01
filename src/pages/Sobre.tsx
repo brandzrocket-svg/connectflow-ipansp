@@ -137,7 +137,7 @@ export default function Sobre() {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: area.cor === '#FFFFFF' ? '#888' : area.cor }} />
-                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{area.icone} {area.nome}</span>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{area.nome}</span>
                 </div>
                 <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{area.colider}</p>
               </div>
@@ -183,7 +183,6 @@ export default function Sobre() {
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
-                    <span className="text-base">{area.icone}</span>
                   </div>
                   <p className="font-black text-sm mb-0.5" style={{ color: 'var(--text-primary)' }}>{area.nome}</p>
                   <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{area.colider}</p>

@@ -133,3 +133,16 @@ export async function createVoluntario(v: Omit<Voluntario, 'id' | 'criado_em'>):
 export async function deleteVoluntario(id: string): Promise<void> {
   await supabase.from('voluntarios').update({ ativo: false }).eq('id', id)
 }
+
+export async function getVoluntariosCountByArea(): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from('voluntarios')
+    .select('area_id')
+    .eq('ativo', true)
+  if (error || !data) return {}
+  const counts: Record<string, number> = {}
+  for (const row of data) {
+    counts[row.area_id] = (counts[row.area_id] ?? 0) + 1
+  }
+  return counts
+}

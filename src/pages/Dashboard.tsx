@@ -10,6 +10,8 @@ import VisaoGeralPanel from '../panels/VisaoGeralPanel';
 import SobrePanel from '../panels/SobrePanel';
 import Tutorial from '../components/Tutorial';
 import { AREAS } from '../constants/areas';
+import { getVoluntariosCountByArea } from '../lib/storage';
+import { supabase } from '../lib/supabase';
 
 const MESES_PT = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -42,8 +44,20 @@ export default function Dashboard() {
 
   const { eventos, addEvento, removeEvento, refresh: refreshEventos, loading: loadingEventos } = useEventos(year, month);
   const { escalas, refresh: refreshEscalas, loading: loadingEscalas } = useEscalas();
+  const [volCounts, setVolCounts] = useState<Record<string, number>>({});
 
   useEffect(() => { refreshEventos(); }, [refreshEventos]);
+
+  useEffect(() => {
+    getVoluntariosCountByArea().then(setVolCounts).catch(console.error);
+    const channel = supabase
+      .channel('voluntarios-home')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'voluntarios' }, () => {
+        getVoluntariosCountByArea().then(setVolCounts).catch(console.error);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const selectedArea = AREAS.find(a => a.id === view) ?? null;
   const loading = loadingEventos || loadingEscalas;
@@ -298,7 +312,7 @@ export default function Dashboard() {
             </div>
           ) : (
             /* ─── HOME / WELCOME ─── */
-            <WelcomeHome onNavigate={navTo} />
+            <WelcomeHome onNavigate={navTo} voluntariosCount={volCounts} />
           )}
         </div>
       </main>
@@ -363,7 +377,7 @@ export default function Dashboard() {
 }
 
 // ─── Welcome Home ────────────────────────────────────────────────────────────
-function WelcomeHome({ onNavigate }: { onNavigate: (v: string) => void }) {
+function WelcomeHome({ onNavigate, voluntariosCount }: { onNavigate: (v: string) => void; voluntariosCount: Record<string, number> }) {
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
 
@@ -447,13 +461,15 @@ function WelcomeHome({ onNavigate }: { onNavigate: (v: string) => void }) {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = `${cor}55`; e.currentTarget.style.backgroundColor = `${cor}0A`; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.backgroundColor = 'var(--bg-card)'; }}
               >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${cor}20` }}>
-                  <span className="text-sm">{area.icone}</span>
-                </div>
-                <p className="font-bold text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>{area.nome}</p>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
-                  <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{area.colider}</p>
+                <p className="font-bold text-sm leading-tight mb-3" style={{ color: 'var(--text-primary)' }}>{area.nome}</p>
+                <div className="flex items-center justify-between gap-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
+                    <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{area.colider}</p>
+                  </div>
+                  <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+                    {voluntariosCount[area.id] ?? 0}
+                  </span>
                 </div>
               </button>
             );

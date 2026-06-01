@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useReports } from '../hooks/useReports';
 import { AREAS } from '../constants/areas';
 import { EVENTOS_CALENDARIO } from '../constants/calendario';
-import { getEscalas, getAllEventos } from '../lib/storage';
+import { getEscalas, getAllEventos, getVoluntariosCountByArea } from '../lib/storage';
 import type { Escala, Evento } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -43,13 +43,19 @@ const MESES_CURTOS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out
 
 function getAreaById(id: string) { return AREAS.find(a => a.id === id); }
 
+function getEscalasForDate(date: string, escalas: Escala[], supabaseEventos: Evento[]): Escala[] {
+  const ids = supabaseEventos.filter(e => e.data === date).map(e => e.id);
+  return escalas.filter(esc => ids.includes(esc.evento_id));
+}
+
 // ---------------------------------------------------------------------------
 // Drag-and-drop
 // ---------------------------------------------------------------------------
 
-type BlockId = 'ranking' | 'reports' | 'proximos' | 'calendario';
-const DEFAULT_ORDER: BlockId[] = ['ranking', 'reports', 'proximos', 'calendario'];
+type BlockId = 'voluntarios' | 'ranking' | 'reports' | 'proximos' | 'calendario';
+const DEFAULT_ORDER: BlockId[] = ['voluntarios', 'ranking', 'reports', 'proximos', 'calendario'];
 const BLOCK_LABELS: Record<BlockId, string> = {
+  voluntarios: 'Voluntários por Área',
   ranking: 'Voluntários mais presentes',
   reports: 'Últimos Reports',
   proximos: 'Próximos Eventos',
@@ -61,7 +67,8 @@ function loadOrder(): BlockId[] {
     const saved = localStorage.getItem('vg-block-order');
     if (saved) {
       const parsed = JSON.parse(saved) as BlockId[];
-      if (parsed.length === DEFAULT_ORDER.length) return parsed;
+      const hasAll = DEFAULT_ORDER.every(id => parsed.includes(id));
+      if (hasAll && parsed.length === DEFAULT_ORDER.length) return parsed;
     }
   } catch {}
   return [...DEFAULT_ORDER];
@@ -81,10 +88,10 @@ function DragHandle() {
 // EscalasModal
 // ---------------------------------------------------------------------------
 
-function EscalasModal({ date, escalas, eventosDB, onClose }: {
+function EscalasModal({ date, escalas, supabaseEventos, onClose }: {
   date: string;
   escalas: Escala[];
-  eventosDB: Evento[];
+  supabaseEventos: Evento[];
   onClose: () => void;
 }) {
   const d = new Date(date + 'T12:00:00');
@@ -96,11 +103,7 @@ function EscalasModal({ date, escalas, eventosDB, onClose }: {
   // Static calendar events for this date
   const calEvs = EVENTOS_CALENDARIO.filter(e => e.data === date);
 
-  // DB eventos on this date that have escalas
-  const dbEvsDia = eventosDB.filter(e => e.data === date);
-  const escalasNaData = escalas.filter(esc =>
-    dbEvsDia.some(ev => ev.id === esc.evento_id)
-  );
+  const escalasNaData = getEscalasForDate(date, escalas, supabaseEventos);
 
   // Group by area
   const areaCards = AREAS.map(area => {
@@ -222,6 +225,41 @@ function EscalasModal({ date, escalas, eventosDB, onClose }: {
 // Block sub-components
 // ---------------------------------------------------------------------------
 
+function VoluntariosSection({ volCounts }: { volCounts: Record<string, number> }) {
+  const total = Object.values(volCounts).reduce((sum, n) => sum + n, 0);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {AREAS.map(area => {
+          const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
+          const count = volCounts[area.id] ?? 0;
+          return (
+            <div
+              key={area.id}
+              className="rounded-xl p-3 flex items-center gap-3"
+              style={{ backgroundColor: 'var(--bg-card-2)', border: `1px solid ${cor}30` }}
+            >
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-secondary)' }}>{area.nome}</p>
+                <p className="font-black text-lg leading-none mt-0.5" style={{ color: cor }}>{count}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div
+        className="rounded-xl px-4 py-3 flex items-center justify-between"
+        style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Total de Voluntários</span>
+        <span className="font-black text-2xl" style={{ color: 'var(--text-primary)' }}>{total}</span>
+      </div>
+    </div>
+  );
+}
+
 function RankingSection({ escalas }: { escalas: Escala[] }) {
   const ranking: Record<string, { count: number; areas: Record<string, number> }> = {};
   escalas.forEach(e => {
@@ -333,9 +371,9 @@ function ReportsSection({ reports, loading, onMarcarLido }: {
   );
 }
 
-function ProximosEventos({ escalas, eventosDB, onSelectDate }: {
+function ProximosEventos({ escalas, supabaseEventos, onSelectDate }: {
   escalas: Escala[];
-  eventosDB: Evento[];
+  supabaseEventos: Evento[];
   onSelectDate: (date: string) => void;
 }) {
   const hoje = new Date().toISOString().slice(0, 10);
@@ -347,8 +385,7 @@ function ProximosEventos({ escalas, eventosDB, onSelectDate }: {
   const primeiroId = futuros[0]?.id;
 
   function hasEscalasOnDate(date: string): boolean {
-    const dbEvsDia = eventosDB.filter(e => e.data === date);
-    return escalas.some(esc => dbEvsDia.some(ev => ev.id === esc.evento_id));
+    return getEscalasForDate(date, escalas, supabaseEventos).length > 0;
   }
 
   return (
@@ -419,9 +456,9 @@ function ProximosEventos({ escalas, eventosDB, onSelectDate }: {
   );
 }
 
-function CalendarioIgreja({ escalas, eventosDB, onSelectDate }: {
+function CalendarioIgreja({ escalas, supabaseEventos, onSelectDate }: {
   escalas: Escala[];
-  eventosDB: Evento[];
+  supabaseEventos: Evento[];
   onSelectDate: (date: string) => void;
 }) {
   const hoje = new Date().toISOString().slice(0, 10);
@@ -437,8 +474,7 @@ function CalendarioIgreja({ escalas, eventosDB, onSelectDate }: {
 
   function isClickable(dataStr: string, evs: typeof eventosMes): boolean {
     if (evs.length > 0) return true;
-    const dbEvsDia = eventosDB.filter(e => e.data === dataStr);
-    return escalas.some(esc => dbEvsDia.some(ev => ev.id === esc.evento_id));
+    return getEscalasForDate(dataStr, escalas, supabaseEventos).length > 0;
   }
 
   return (
@@ -502,14 +538,18 @@ function CalendarioIgreja({ escalas, eventosDB, onSelectDate }: {
 export default function VisaoGeralPanel() {
   const { reports, loading: loadingReports, marcarLido } = useReports();
   const [escalas, setEscalas] = useState<Escala[]>([]);
-  const [eventosDB, setEventosDB] = useState<Evento[]>([]);
+  const [supabaseEventos, setSupabaseEventos] = useState<Evento[]>([]);
+  const [volCounts, setVolCounts] = useState<Record<string, number>>({});
   const [order, setOrder] = useState<BlockId[]>(loadOrder);
   const [dragging, setDragging] = useState<BlockId | null>(null);
   const [dragOver, setDragOver] = useState<BlockId | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  useEffect(() => { getEscalas().then(setEscalas).catch(console.error); }, []);
-  useEffect(() => { getAllEventos().then(setEventosDB).catch(console.error); }, []);
+  useEffect(() => {
+    getEscalas().then(setEscalas).catch(console.error);
+    getAllEventos().then(setSupabaseEventos).catch(console.error);
+    getVoluntariosCountByArea().then(setVolCounts).catch(console.error);
+  }, []);
 
   function handleDragStart(id: BlockId) { setDragging(id); }
   function handleDragOver(e: React.DragEvent, id: BlockId) { e.preventDefault(); if (id !== dragging) setDragOver(id); }
@@ -528,10 +568,11 @@ export default function VisaoGeralPanel() {
 
   function renderBlock(id: BlockId) {
     switch (id) {
+      case 'voluntarios': return <VoluntariosSection volCounts={volCounts} />;
       case 'ranking':    return <RankingSection escalas={escalas} />;
       case 'reports':    return <ReportsSection reports={reports} loading={loadingReports} onMarcarLido={marcarLido} />;
-      case 'proximos':   return <ProximosEventos escalas={escalas} eventosDB={eventosDB} onSelectDate={setSelectedDate} />;
-      case 'calendario': return <CalendarioIgreja escalas={escalas} eventosDB={eventosDB} onSelectDate={setSelectedDate} />;
+      case 'proximos':   return <ProximosEventos escalas={escalas} supabaseEventos={supabaseEventos} onSelectDate={setSelectedDate} />;
+      case 'calendario': return <CalendarioIgreja escalas={escalas} supabaseEventos={supabaseEventos} onSelectDate={setSelectedDate} />;
     }
   }
 
@@ -582,7 +623,7 @@ export default function VisaoGeralPanel() {
         <EscalasModal
           date={selectedDate}
           escalas={escalas}
-          eventosDB={eventosDB}
+          supabaseEventos={supabaseEventos}
           onClose={() => setSelectedDate(null)}
         />
       )}
