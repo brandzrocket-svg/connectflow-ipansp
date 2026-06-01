@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
@@ -38,27 +37,20 @@ export default function Sobre() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [month] = useState(6);
-  const [year] = useState(2026);
-
-  function prevMonth() {}
-  function nextMonth() {}
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Header
-        mes={month}
-        ano={year}
-        onPrevMonth={prevMonth}
-        onNextMonth={nextMonth}
         user={user ? { email: user.email ?? '', nome: user.email ?? '' } : null}
         onLoginClick={() => navigate('/login')}
         onLogout={logout}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onNavTo={() => navigate('/')}
+        currentView="sobre"
+        onStartTutorial={() => {}}
       />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
         {/* Botão voltar */}
         <button
           onClick={() => navigate('/')}
@@ -136,7 +128,7 @@ export default function Sobre() {
           </div>
 
           {/* Co-líderes grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {AREAS.map(area => (
               <div
                 key={area.id}
@@ -159,7 +151,7 @@ export default function Sobre() {
           style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
         >
           <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: 'var(--text-secondary)' }}>Cultura do Ministério</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 stagger animate-fade-in">
             {CULTURA.map(item => (
               <div
                 key={item.titulo}
@@ -179,7 +171,7 @@ export default function Sobre() {
           style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
         >
           <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: 'var(--text-secondary)' }}>As Áreas</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 stagger animate-fade-in">
             {AREAS.map(area => {
               const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
               return (

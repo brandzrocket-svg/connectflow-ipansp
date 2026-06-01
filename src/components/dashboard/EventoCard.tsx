@@ -25,7 +25,9 @@ export default function EventoCard({ evento, escalas, areas }: EventoCardProps) 
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', transition: 'box-shadow 0.2s ease, transform 0.2s ease' }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
     >
       {/* Header do evento */}
       <div className="flex items-start justify-between gap-3">

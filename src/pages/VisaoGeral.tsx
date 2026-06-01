@@ -461,10 +461,6 @@ export default function VisaoGeral() {
     getEscalas().then(setEscalas).catch(console.error);
   }, []);
 
-  const now = new Date();
-  const [month] = useState(now.getMonth() + 1);
-  const [year] = useState(now.getFullYear());
-
   function handleDragStart(id: BlockId) {
     setDragging(id);
   }
@@ -503,15 +499,14 @@ export default function VisaoGeral() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Header
-        mes={month}
-        ano={year}
-        onPrevMonth={() => {}}
-        onNextMonth={() => {}}
         user={user ? { email: user.email ?? '', nome: user.email ?? '' } : null}
         onLoginClick={() => navigate('/login')}
         onLogout={logout}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onNavTo={() => navigate('/')}
+        currentView="visao-geral"
+        onStartTutorial={() => {}}
       />
 
       <div className="max-w-5xl mx-auto px-4 py-8 animate-fade-in">

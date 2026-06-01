@@ -32,7 +32,7 @@ export default function Login() {
       className="min-h-screen flex flex-col items-center justify-center p-6"
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
-      <div className="w-full max-w-sm flex flex-col gap-8">
+      <div className="w-full max-w-sm flex flex-col gap-8 animate-fade-in-scale">
         <div className="text-center">
           <h1 className="text-4xl tracking-tight select-none mb-2">
             <span className="text-white font-light">connect</span>

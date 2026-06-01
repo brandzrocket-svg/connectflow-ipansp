@@ -14,22 +14,26 @@ const MESES_PT = [
 
 interface AreaPanelProps {
   area: Area;
-  year: number;
-  month: number;
   isAuthenticated: boolean;
   user: { email: string } | null;
 }
 
-export default function AreaPanel({ area, year, month, isAuthenticated, user }: AreaPanelProps) {
+export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProps) {
+  const [year, setYear] = useState(2026);
+  const [month, setMonth] = useState(6);
+
   const { eventos, loading: loadingEventos } = useEventos(year, month);
   const { escalas, saveEscala, removeEscala, refresh: refreshEscalas, loading: loadingEscalas } = useEscalas(area.id);
   const { voluntarios, error: voluntarioError, addVoluntario, removeVoluntario } = useVoluntarios(area.id);
+
   const [showForm, setShowForm] = useState(false);
   const [escalaEditando, setEscalaEditando] = useState<Escala | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [reportMensagem, setReportMensagem] = useState('');
   const [reportEnviado, setReportEnviado] = useState(false);
   const [reportEnviando, setReportEnviando] = useState(false);
+  const [sugestaoMensagem, setSugestaoMensagem] = useState('');
+  const [sugestaoEnviada, setSugestaoEnviada] = useState(false);
   const [novoVoluntario, setNovoVoluntario] = useState('');
   const [adicionandoVoluntario, setAdicionandoVoluntario] = useState(false);
 
@@ -48,6 +52,15 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
 
   const loading = loadingEventos || loadingEscalas;
 
+  function prevMonth() {
+    if (month === 1) { setMonth(12); setYear(y => y - 1); }
+    else setMonth(m => m - 1);
+  }
+  function nextMonth() {
+    if (month === 12) { setMonth(1); setYear(y => y + 1); }
+    else setMonth(m => m + 1);
+  }
+
   async function handleAddVoluntario(e: React.FormEvent) {
     e.preventDefault();
     const nome = novoVoluntario.trim();
@@ -65,7 +78,7 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
     try {
       await createReport({
         area_id: area.id,
-        mensagem: reportMensagem.trim(),
+        mensagem: `[REPORT] ${reportMensagem.trim()}`,
         criado_por: user?.email ?? 'anon',
       });
       setReportMensagem('');
@@ -77,31 +90,74 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
     setReportEnviando(false);
   }
 
+  async function handleEnviarSugestao(e: React.FormEvent) {
+    e.preventDefault();
+    if (!sugestaoMensagem.trim()) return;
+    try {
+      await createReport({
+        area_id: area.id,
+        mensagem: `[SUGESTÃO] ${sugestaoMensagem.trim()}`,
+        criado_por: user?.email ?? 'voluntário',
+      });
+      setSugestaoMensagem('');
+      setSugestaoEnviada(true);
+      setTimeout(() => setSugestaoEnviada(false), 3000);
+    } catch (err) {
+      console.error('Erro ao enviar sugestão:', err);
+    }
+  }
+
   return (
     <div className="animate-fade-in">
-      {/* Area header */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+      {/* ─── Area header + month nav ─── */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
         <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
         <div className="flex-1 min-w-0">
           <h2 className="font-black text-xl tracking-tight" style={{ color: 'var(--text-primary)' }}>
             {area.nome}
           </h2>
           <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-            {MESES_PT[month - 1]} {year} · Co-líder: {area.colider}
+            Co-líder: {area.colider}
           </p>
         </div>
+
+        {/* Month nav */}
+        <div className="flex items-center gap-1.5 rounded-xl px-3 py-2" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <button
+            onClick={prevMonth}
+            className="w-6 h-6 flex items-center justify-center rounded text-lg font-light transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            ‹
+          </button>
+          <span className="text-xs font-semibold tracking-wider uppercase min-w-[90px] text-center" style={{ color: 'var(--text-primary)' }}>
+            {MESES_PT[month - 1]} {year}
+          </span>
+          <button
+            onClick={nextMonth}
+            className="w-6 h-6 flex items-center justify-center rounded text-lg font-light transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            ›
+          </button>
+        </div>
+
         {isAuthenticated && (
           <button
             onClick={() => { setEscalaEditando(undefined); setShowForm(true); }}
-            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
+            className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
             style={{ backgroundColor: cor, color: '#000' }}
           >
-            + Adicionar Escala
+            + Escala
           </button>
         )}
       </div>
 
-      {/* Escalas / Events list */}
+      {/* ─── Escalas ─── */}
       {loading ? (
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map(i => (
@@ -124,9 +180,7 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
 
           {eventosSemEscala.map(evento => {
             const d = new Date(evento.data + 'T00:00:00');
-            const dataFmt = d.toLocaleDateString('pt-BR', {
-              day: '2-digit', month: 'long', weekday: 'long',
-            });
+            const dataFmt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', weekday: 'long' });
             return (
               <div
                 key={evento.id}
@@ -163,14 +217,14 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
             >
               <p className="text-3xl mb-3">📅</p>
               <p className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Nenhum evento neste mês</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Cadastre eventos no Dashboard principal</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Cadastre eventos no início do Dashboard</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Voluntários */}
-      <div className="mt-6 rounded-2xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+      {/* ─── Voluntários ─── */}
+      <div id="voluntarios-section" className="mt-6 rounded-2xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
         <div className="flex items-center gap-2 mb-4">
           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cor }} />
           <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
@@ -233,9 +287,10 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
         )}
       </div>
 
-      {/* Reportar */}
+      {/* ─── Reportar para o Líder ─── */}
       {isAuthenticated && (
         <div
+          id="report-section"
           className="mt-4 rounded-2xl p-5 flex flex-col gap-4"
           style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${cor}40` }}
         >
@@ -273,6 +328,48 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
         </div>
       )}
 
+      {/* ─── Sugestões de Melhoria ─── */}
+      <div
+        id="sugestao-section"
+        className="mt-4 rounded-2xl p-5 flex flex-col gap-4"
+        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-base">💡</span>
+          <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+            Sugestões de Melhoria
+          </h3>
+        </div>
+        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          Tem uma ideia para melhorar esta área ou o app? Compartilhe!
+        </p>
+        <form onSubmit={handleEnviarSugestao} className="flex flex-col gap-3">
+          <textarea
+            value={sugestaoMensagem}
+            onChange={e => setSugestaoMensagem(e.target.value)}
+            placeholder="Descreva sua ideia ou sugestão de melhoria..."
+            rows={2}
+            className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"
+            style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+          />
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={!sugestaoMensagem.trim()}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40 transition-opacity hover:opacity-90"
+              style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+            >
+              Enviar Sugestão
+            </button>
+            {sugestaoEnviada && (
+              <span className="text-sm font-semibold" style={{ color: '#22C55E' }}>
+                Sugestão enviada!
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+
       {/* EscalaForm modal */}
       {showForm && (
         <EscalaForm
@@ -294,7 +391,7 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
         />
       )}
 
-      {/* Confirm delete modal */}
+      {/* Confirm delete */}
       {confirmDelete && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
@@ -312,7 +409,7 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 rounded-xl py-3 text-sm font-semibold transition-colors"
+                className="flex-1 rounded-xl py-3 text-sm font-semibold"
                 style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
               >
                 Cancelar
@@ -322,7 +419,7 @@ export default function AreaPanel({ area, year, month, isAuthenticated, user }: 
                   try { await removeEscala(confirmDelete); } catch (err) { console.error(err); }
                   setConfirmDelete(null);
                 }}
-                className="flex-1 rounded-xl py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                className="flex-1 rounded-xl py-3 text-sm font-bold text-white"
                 style={{ backgroundColor: '#EF4444' }}
               >
                 Excluir
