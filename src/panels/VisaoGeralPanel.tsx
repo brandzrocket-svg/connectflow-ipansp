@@ -44,8 +44,12 @@ const MESES_CURTOS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out
 function getAreaById(id: string) { return AREAS.find(a => a.id === id); }
 
 function getEscalasForDate(date: string, escalas: Escala[], supabaseEventos: Evento[]): Escala[] {
-  const ids = supabaseEventos.filter(e => e.data === date).map(e => e.id);
-  return escalas.filter(esc => ids.includes(esc.evento_id));
+  // Escalas salvas pelo AreaPanel usam IDs do calendário estático (ex: 'c1', 'c2')
+  const staticIds = EVENTOS_CALENDARIO.filter(e => e.data === date).map(e => e.id);
+  // Escalas salvas via aba Escalas usam UUIDs do Supabase
+  const dbIds = supabaseEventos.filter(e => e.data === date).map(e => e.id);
+  const allIds = new Set([...staticIds, ...dbIds]);
+  return escalas.filter(esc => allIds.has(esc.evento_id));
 }
 
 // ---------------------------------------------------------------------------
