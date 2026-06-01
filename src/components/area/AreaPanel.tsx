@@ -47,7 +47,7 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
     })
     .sort((a, b) => a.data.localeCompare(b.data));
 
-  const { escalas, saveEscala, removeEscala, refresh: refreshEscalas, loading } = useEscalas(area.id);
+  const { escalas, saveEscala, removeEscala, loading } = useEscalas(area.id);
   const { voluntarios, error: voluntarioError, addVoluntario, removeVoluntario } = useVoluntarios(area.id);
 
   // Inline checklist
@@ -55,6 +55,7 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
   const [draftVols, setDraftVols]     = useState<Record<string, string[]>>({});
   const [draftObs, setDraftObs]       = useState<Record<string, string>>({});
   const [saving, setSaving]           = useState<string | null>(null);
+  const [saveError, setSaveError]     = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   // Report / Sugestão
@@ -101,6 +102,7 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
 
   async function saveInline(eventoId: string) {
     setSaving(eventoId);
+    setSaveError(null);
     try {
       await saveEscala({
         evento_id: eventoId,
@@ -109,10 +111,11 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
         observacao: draftObs[eventoId] || undefined,
         criado_por: user?.email,
       });
-      await refreshEscalas();
       setExpandedId(null);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Erro ao salvar escala:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveError(msg || 'Erro ao salvar. Verifique as configurações do Supabase.');
     } finally {
       setSaving(null);
     }
@@ -200,6 +203,21 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}>›</button>
         </div>
       </div>
+
+      {/* ─── Save error banner ─── */}
+      {saveError && (
+        <div
+          className="rounded-xl px-4 py-3 mb-4 flex items-start gap-3 text-sm"
+          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#F87171' }}
+        >
+          <span className="flex-shrink-0">⚠️</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold">Erro ao salvar escala</p>
+            <p className="text-xs mt-0.5 opacity-80">{saveError}</p>
+          </div>
+          <button onClick={() => setSaveError(null)} style={{ color: '#F87171' }}>×</button>
+        </div>
+      )}
 
       {/* ─── Calendar grid ─── */}
       <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>

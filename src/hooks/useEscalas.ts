@@ -22,7 +22,7 @@ export function useEscalas(areaId?: string) {
 
   async function saveEscala(data: Omit<Escala, 'id' | 'atualizado_em'>) {
     await upsertEscala(data)
-    refresh()
+    await refresh()
   }
 
   async function removeEscala(id: string) {

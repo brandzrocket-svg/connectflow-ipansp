@@ -25,7 +25,7 @@ interface NovoEventoForm {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  useTheme();
 
   useEffect(() => {
     if (!isAuthenticated) navigate('/login', { replace: true });
@@ -121,17 +121,7 @@ export default function Dashboard() {
             <span className="truncate">Tutorial</span>
           </button>
 
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left w-full text-sm transition-all"
-            style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
-          >
-            <span className="text-base flex-shrink-0">{theme === 'dark' ? '☀️' : '🌙'}</span>
-            <span className="truncate">{theme === 'dark' ? 'Modo claro' : 'Modo escuro'}</span>
-          </button>
+          {/* Theme toggle — hidden (light mode disabled for now) */}
 
           {/* Auth */}
           {user ? (
