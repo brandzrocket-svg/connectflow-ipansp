@@ -9,40 +9,40 @@ interface TutorialStep {
 
 const STEPS: TutorialStep[] = [
   {
+    emoji: '☰',
+    titulo: 'Navegando pelo App',
+    descricao: 'Toda a navegação fica na barra lateral esquerda: acesse as áreas do ministério, Escalas, Visão Geral, Sobre, Tutorial, modo claro/escuro e login. No celular, toque no ☰ para abrir o menu.',
+    dica: 'A página inicial mostra o versículo da nossa missão e atalhos para todas as seções.',
+  },
+  {
     emoji: '📅',
-    titulo: 'Vendo os Eventos do Mês',
-    descricao: 'Na tela inicial você vê todos os eventos cadastrados para o mês. Cada card mostra as escalas preenchidas por área. Para mudar o mês, use o filtro ← → dentro de cada área.',
-    dica: 'Os eventos ficam organizados por data automaticamente.',
+    titulo: 'Calendário por Área',
+    descricao: 'Clique em uma área na sidebar (ex: Livestream). Você verá o calendário do mês com os eventos da igreja marcados. Use ‹ › para navegar entre os meses.',
+    dica: 'Eventos com dot colorido = tipo do evento. Dot na cor da área = já tem escala salva.',
   },
   {
-    emoji: '✍️',
-    titulo: 'Cadastrando uma Escala',
-    descricao: 'Clique em uma área na barra lateral (ex: Social Media). Na tela da área, clique em "+ Escala". Selecione o evento, adicione os nomes dos voluntários e salve.',
-    dica: 'Você pode editar ou excluir uma escala a qualquer momento.',
-  },
-  {
-    emoji: '📋',
-    titulo: 'Visualizando a Agenda',
-    descricao: 'Na Visão Geral (ícone 📊 na sidebar), você encontra o calendário completo da Igreja com todos os eventos de Jun–Dez 2026 e uma fila dos próximos cultos.',
-    dica: 'Arraste os blocos da Visão Geral para reorganizar na ordem que preferir.',
+    emoji: '✅',
+    titulo: 'Escalando Voluntários',
+    descricao: 'Clique em qualquer evento na lista ou no calendário para expandir o checklist. Marque os voluntários da sua equipe que estarão presentes naquele dia e clique em "Salvar Escala".',
+    dica: 'Você pode editar a qualquer momento clicando no evento novamente. O ✕ exclui a escala.',
   },
   {
     emoji: '👥',
     titulo: 'Cadastrando Voluntários',
-    descricao: 'Dentro de cada área, role até a seção "Voluntários". Digite o nome no campo e clique em "+ Adicionar". Os voluntários ficam salvos e disponíveis na escala.',
-    dica: 'Para remover um voluntário, clique no ✕ ao lado do nome.',
+    descricao: 'Dentro de cada área, role até a seção "Voluntários". Digite o nome e clique em "+ Adicionar". Os nomes cadastrados aparecem automaticamente como checkboxes no checklist de escala.',
+    dica: 'Para remover um voluntário da equipe, clique no ✕ ao lado do nome.',
+  },
+  {
+    emoji: '📊',
+    titulo: 'Visão Geral — Ver Todos os Escalados',
+    descricao: 'Na Visão Geral (sidebar), clique em qualquer data no calendário ou nos cards de "Próximos Eventos". Um painel abre mostrando todos os voluntários escalados por área naquele dia.',
+    dica: 'Arraste os blocos da Visão Geral para reorganizá-los na ordem que preferir.',
   },
   {
     emoji: '📣',
-    titulo: 'Enviando Reports ao Líder',
-    descricao: 'Dentro de cada área, role até "Reportar para o Líder". Descreva uma observação, necessidade ou ocorrência e clique em "Enviar Report". O líder verá na Visão Geral.',
-    dica: 'Reports aparecem na Visão Geral com destaque para os não lidos.',
-  },
-  {
-    emoji: '💡',
-    titulo: 'Enviando Sugestões de Melhoria',
-    descricao: 'Dentro de cada área, role até "Sugestões de Melhoria". Compartilhe ideias para melhorar o app ou a área. Todas as sugestões chegam ao líder na Visão Geral.',
-    dica: 'Qualquer voluntário pode enviar sugestões — sem precisar de login!',
+    titulo: 'Reports e Sugestões',
+    descricao: 'Dentro de cada área, role até "Reportar para o Líder" para enviar observações ou ocorrências. Na seção "Sugestões de Melhoria", qualquer voluntário pode enviar ideias — sem precisar de login.',
+    dica: 'O líder vê todos os reports na Visão Geral e pode marcá-los como lidos com ✓.',
   },
 ];
 
