@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useReports } from '../hooks/useReports';
 import { AREAS } from '../constants/areas';
 import { EVENTOS_CALENDARIO } from '../constants/calendario';
-import { getEscalas } from '../lib/storage';
-import type { Escala } from '../types';
+import { getEscalas, getAllEventos } from '../lib/storage';
+import type { Escala, Evento } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -38,6 +38,7 @@ const TIPO_DOT_COLOR: Record<string, string> = {
 
 const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS_SEMANA_CURTO = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_SEMANA_LONGO = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 const MESES_CURTOS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 function getAreaById(id: string) { return AREAS.find(a => a.id === id); }
@@ -73,6 +74,147 @@ function DragHandle() {
       <circle cx="4" cy="7" r="1.2" /><circle cx="10" cy="7" r="1.2" />
       <circle cx="4" cy="11" r="1.2" /><circle cx="10" cy="11" r="1.2" />
     </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// EscalasModal
+// ---------------------------------------------------------------------------
+
+function EscalasModal({ date, escalas, eventosDB, onClose }: {
+  date: string;
+  escalas: Escala[];
+  eventosDB: Evento[];
+  onClose: () => void;
+}) {
+  const d = new Date(date + 'T12:00:00');
+  const dia = d.getDate();
+  const mes = MESES_PT[d.getMonth()];
+  const diaSem = DIAS_SEMANA_LONGO[d.getDay()];
+  const headerLabel = `${dia} de ${mes} · ${diaSem}`;
+
+  // Static calendar events for this date
+  const calEvs = EVENTOS_CALENDARIO.filter(e => e.data === date);
+
+  // DB eventos on this date that have escalas
+  const dbEvsDia = eventosDB.filter(e => e.data === date);
+  const escalasNaData = escalas.filter(esc =>
+    dbEvsDia.some(ev => ev.id === esc.evento_id)
+  );
+
+  // Group by area
+  const areaCards = AREAS.map(area => {
+    const volNames = escalasNaData
+      .filter(esc => esc.area_id === area.id)
+      .flatMap(esc => esc.voluntarios ?? []);
+    return { area, volNames };
+  }).filter(({ volNames }) => volNames.length > 0);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          maxHeight: '80vh',
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+          style={{ borderBottom: '1px solid var(--border-color)' }}
+        >
+          <h2 className="font-black text-base" style={{ color: 'var(--text-primary)' }}>
+            {headerLabel}
+          </h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-sm"
+            style={{ backgroundColor: 'var(--bg-card-2)', color: 'var(--text-muted)' }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-5 flex flex-col gap-4">
+          {/* Static calendar events */}
+          {calEvs.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+                Programação
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {calEvs.map(ev => (
+                  <span
+                    key={ev.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                    style={{
+                      backgroundColor: `${TIPO_DOT_COLOR[ev.tipo]}20`,
+                      border: `1px solid ${TIPO_DOT_COLOR[ev.tipo]}40`,
+                      color: TIPO_DOT_COLOR[ev.tipo],
+                    }}
+                  >
+                    {ev.titulo}
+                    {ev.horario && <span className="opacity-70">· {ev.horario}</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Area cards */}
+          {areaCards.length === 0 ? (
+            <p className="text-sm italic text-center py-4" style={{ color: 'var(--text-muted)' }}>
+              Nenhuma escala registrada para esta data.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                Escalas por Área
+              </p>
+              {areaCards.map(({ area, volNames }) => {
+                const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
+                return (
+                  <div
+                    key={area.id}
+                    className="rounded-xl p-3"
+                    style={{
+                      backgroundColor: 'var(--bg-card-2)',
+                      border: `1px solid ${cor}30`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
+                      <span className="text-xs font-bold" style={{ color: cor }}>{area.nome}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {volNames.map((nome, i) => (
+                        <span
+                          key={`${nome}-${i}`}
+                          className="px-2.5 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: `${cor}15`,
+                            border: `1px solid ${cor}30`,
+                            color: 'var(--text-secondary)',
+                          }}
+                        >
+                          {nome}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -191,7 +333,11 @@ function ReportsSection({ reports, loading, onMarcarLido }: {
   );
 }
 
-function ProximosEventos() {
+function ProximosEventos({ escalas, eventosDB, onSelectDate }: {
+  escalas: Escala[];
+  eventosDB: Evento[];
+  onSelectDate: (date: string) => void;
+}) {
   const hoje = new Date().toISOString().slice(0, 10);
   const futuros = EVENTOS_CALENDARIO.filter(e => e.data >= hoje);
   const [mesFiltro, setMesFiltro] = useState<number | null>(null);
@@ -199,6 +345,11 @@ function ProximosEventos() {
   const mesesDisponiveis = Array.from(new Set(futuros.map(e => Number(e.data.slice(5, 7))))).sort();
   const exibir = mesFiltro ? futuros.filter(e => Number(e.data.slice(5, 7)) === mesFiltro) : futuros;
   const primeiroId = futuros[0]?.id;
+
+  function hasEscalasOnDate(date: string): boolean {
+    const dbEvsDia = eventosDB.filter(e => e.data === date);
+    return escalas.some(esc => dbEvsDia.some(ev => ev.id === esc.evento_id));
+  }
 
   return (
     <>
@@ -224,11 +375,28 @@ function ProximosEventos() {
           const dia = String(d.getDate()).padStart(2, '0');
           const mes = MESES_CURTOS[d.getMonth()];
           const diaSem = DIAS_SEMANA_CURTO[d.getDay()];
+          const temEscala = hasEscalasOnDate(ev.data);
           return (
             <div
               key={ev.id}
-              className="flex-shrink-0 rounded-2xl p-4 flex flex-col gap-2"
-              style={{ minWidth: '175px', width: '175px', backgroundColor: 'var(--bg-card-2)', border: isDestaque ? '1.5px solid rgba(255,255,255,0.4)' : '1px solid var(--border-color)', opacity: isPast ? 0.4 : 1 }}
+              onClick={() => onSelectDate(ev.data)}
+              className="flex-shrink-0 rounded-2xl p-4 flex flex-col gap-2 cursor-pointer"
+              style={{
+                minWidth: '175px',
+                width: '175px',
+                backgroundColor: 'var(--bg-card-2)',
+                border: isDestaque ? '1.5px solid rgba(255,255,255,0.4)' : '1px solid var(--border-color)',
+                opacity: isPast ? 0.4 : 1,
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = '';
+                e.currentTarget.style.boxShadow = '';
+              }}
             >
               <div className="flex items-baseline gap-1.5">
                 <span className="font-black text-2xl leading-none" style={{ color: 'var(--text-primary)' }}>{dia}</span>
@@ -238,6 +406,11 @@ function ProximosEventos() {
               <p className="text-xs font-semibold leading-snug mt-1 line-clamp-2" style={{ color: 'var(--text-primary)' }}>{ev.titulo}</p>
               {ev.horario && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{ev.horario}</span>}
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full self-start mt-auto" style={{ color: badge.color, backgroundColor: badge.bg }}>{badge.label}</span>
+              {temEscala && (
+                <div className="flex justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22C55E' }} title="Escalas registradas" />
+                </div>
+              )}
             </div>
           );
         })}
@@ -246,16 +419,27 @@ function ProximosEventos() {
   );
 }
 
-function CalendarioIgreja() {
+function CalendarioIgreja({ escalas, eventosDB, onSelectDate }: {
+  escalas: Escala[];
+  eventosDB: Evento[];
+  onSelectDate: (date: string) => void;
+}) {
   const hoje = new Date().toISOString().slice(0, 10);
   const [mes, setMes] = useState(() => Math.min(Math.max(new Date().getMonth() + 1, 6), 12));
   const ano = 2026;
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   const eventosMes = EVENTOS_CALENDARIO.filter(e => Number(e.data.slice(5, 7)) === mes && Number(e.data.slice(0, 4)) === ano);
   const primeiroDia = new Date(ano, mes - 1, 1).getDay();
   const diasNoMes = new Date(ano, mes, 0).getDate();
   const cells: Array<number | null> = [...Array(primeiroDia).fill(null), ...Array.from({ length: diasNoMes }, (_, i) => i + 1)];
   while (cells.length % 7 !== 0) cells.push(null);
+
+  function isClickable(dataStr: string, evs: typeof eventosMes): boolean {
+    if (evs.length > 0) return true;
+    const dbEvsDia = eventosDB.filter(e => e.data === dataStr);
+    return escalas.some(esc => dbEvsDia.some(ev => ev.id === esc.evento_id));
+  }
 
   return (
     <>
@@ -281,8 +465,26 @@ function CalendarioIgreja() {
           const dataStr = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
           const evs = eventosMes.filter(e => e.data === dataStr);
           const isHoje = dataStr === hoje;
+          const clickable = isClickable(dataStr, evs);
+          const isHovered = hoveredDate === dataStr;
           return (
-            <div key={dia} className="rounded-lg p-1 min-h-[48px] flex flex-col gap-0.5 overflow-hidden" style={{ backgroundColor: isHoje ? 'rgba(255,255,255,0.06)' : 'var(--bg-card-2)', border: isHoje ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent' }}>
+            <div
+              key={dia}
+              className="rounded-lg p-1 min-h-[48px] flex flex-col gap-0.5 overflow-hidden"
+              style={{
+                backgroundColor: isHoje ? 'rgba(255,255,255,0.06)' : 'var(--bg-card-2)',
+                border: isHovered && clickable
+                  ? '1px solid rgba(255,255,255,0.35)'
+                  : isHoje
+                    ? '1px solid rgba(255,255,255,0.2)'
+                    : '1px solid transparent',
+                cursor: clickable ? 'pointer' : 'default',
+                transition: 'border-color 0.15s ease',
+              }}
+              onClick={() => clickable && onSelectDate(dataStr)}
+              onMouseEnter={() => clickable && setHoveredDate(dataStr)}
+              onMouseLeave={() => setHoveredDate(null)}
+            >
               <span className="text-xs font-bold self-end" style={{ color: isHoje ? 'var(--text-primary)' : 'var(--text-secondary)', opacity: isHoje ? 1 : 0.6 }}>{dia}</span>
               {evs.map(ev => <div key={ev.id} className="w-full rounded px-1 text-[9px] font-semibold leading-snug truncate" style={{ backgroundColor: `${TIPO_DOT_COLOR[ev.tipo]}25`, color: TIPO_DOT_COLOR[ev.tipo] }} title={ev.titulo}>{ev.titulo}</div>)}
             </div>
@@ -300,11 +502,14 @@ function CalendarioIgreja() {
 export default function VisaoGeralPanel() {
   const { reports, loading: loadingReports, marcarLido } = useReports();
   const [escalas, setEscalas] = useState<Escala[]>([]);
+  const [eventosDB, setEventosDB] = useState<Evento[]>([]);
   const [order, setOrder] = useState<BlockId[]>(loadOrder);
   const [dragging, setDragging] = useState<BlockId | null>(null);
   const [dragOver, setDragOver] = useState<BlockId | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => { getEscalas().then(setEscalas).catch(console.error); }, []);
+  useEffect(() => { getAllEventos().then(setEventosDB).catch(console.error); }, []);
 
   function handleDragStart(id: BlockId) { setDragging(id); }
   function handleDragOver(e: React.DragEvent, id: BlockId) { e.preventDefault(); if (id !== dragging) setDragOver(id); }
@@ -325,8 +530,8 @@ export default function VisaoGeralPanel() {
     switch (id) {
       case 'ranking':    return <RankingSection escalas={escalas} />;
       case 'reports':    return <ReportsSection reports={reports} loading={loadingReports} onMarcarLido={marcarLido} />;
-      case 'proximos':   return <ProximosEventos />;
-      case 'calendario': return <CalendarioIgreja />;
+      case 'proximos':   return <ProximosEventos escalas={escalas} eventosDB={eventosDB} onSelectDate={setSelectedDate} />;
+      case 'calendario': return <CalendarioIgreja escalas={escalas} eventosDB={eventosDB} onSelectDate={setSelectedDate} />;
     }
   }
 
@@ -372,6 +577,15 @@ export default function VisaoGeralPanel() {
           );
         })}
       </div>
+
+      {selectedDate && (
+        <EscalasModal
+          date={selectedDate}
+          escalas={escalas}
+          eventosDB={eventosDB}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
     </div>
   );
 }

@@ -29,6 +29,15 @@ export async function deleteEvento(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function getAllEventos(): Promise<Evento[]> {
+  const { data, error } = await supabase
+    .from('eventos')
+    .select('*')
+    .order('data', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
 export async function getEscalas(): Promise<Escala[]> {
   const { data, error } = await supabase.from('escalas').select('*')
   if (error) throw error

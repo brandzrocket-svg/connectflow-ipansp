@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { useEventos } from '../../hooks/useEventos';
 import { useEscalas } from '../../hooks/useEscalas';
 import { useVoluntarios } from '../../hooks/useVoluntarios';
-import EscalaCard from './EscalaCard';
-import EscalaForm from '../shared/EscalaForm';
-import type { Area, Escala } from '../../types';
+import type { Area } from '../../types';
 import { createReport } from '../../lib/storage';
 
 const MESES_PT = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
+
+const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 interface AreaPanelProps {
   area: Area;
@@ -26,8 +26,12 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
   const { escalas, saveEscala, removeEscala, refresh: refreshEscalas, loading: loadingEscalas } = useEscalas(area.id);
   const { voluntarios, error: voluntarioError, addVoluntario, removeVoluntario } = useVoluntarios(area.id);
 
-  const [showForm, setShowForm] = useState(false);
-  const [escalaEditando, setEscalaEditando] = useState<Escala | undefined>(undefined);
+  // Inline checklist states
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [draftVols, setDraftVols] = useState<Record<string, string[]>>({});
+  const [draftObs, setDraftObs] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<string | null>(null);
+
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [reportMensagem, setReportMensagem] = useState('');
   const [reportEnviado, setReportEnviado] = useState(false);
@@ -40,16 +44,6 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
   const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
   const eventosSorted = [...eventos].sort((a, b) => a.data.localeCompare(b.data));
 
-  const eventosComEscala = escalas
-    .filter(e => eventosSorted.some(ev => ev.id === e.evento_id))
-    .map(escala => ({ escala, evento: eventosSorted.find(ev => ev.id === escala.evento_id) }))
-    .filter(item => item.evento)
-    .sort((a, b) => a.evento!.data.localeCompare(b.evento!.data));
-
-  const eventosSemEscala = eventosSorted.filter(
-    ev => !escalas.some(e => e.evento_id === ev.id)
-  );
-
   const loading = loadingEventos || loadingEscalas;
 
   function prevMonth() {
@@ -59,6 +53,51 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
   function nextMonth() {
     if (month === 12) { setMonth(1); setYear(y => y + 1); }
     else setMonth(m => m + 1);
+  }
+
+  function handleOpen(eventoId: string) {
+    if (expandedId === eventoId) {
+      setExpandedId(null);
+      return;
+    }
+    const escalaExistente = escalas.find(e => e.evento_id === eventoId);
+    setDraftVols(prev => ({
+      ...prev,
+      [eventoId]: escalaExistente?.voluntarios ? [...escalaExistente.voluntarios] : [],
+    }));
+    setDraftObs(prev => ({
+      ...prev,
+      [eventoId]: escalaExistente?.observacao ?? '',
+    }));
+    setExpandedId(eventoId);
+  }
+
+  function toggleVol(eventoId: string, nome: string) {
+    setDraftVols(prev => {
+      const current = prev[eventoId] ?? [];
+      const next = current.includes(nome)
+        ? current.filter(n => n !== nome)
+        : [...current, nome];
+      return { ...prev, [eventoId]: next };
+    });
+  }
+
+  async function saveInline(eventoId: string) {
+    setSaving(eventoId);
+    try {
+      await saveEscala({
+        evento_id: eventoId,
+        area_id: area.id,
+        voluntarios: draftVols[eventoId] ?? [],
+        observacao: draftObs[eventoId] ?? '',
+        criado_por: user?.email,
+      });
+      await refreshEscalas();
+      setExpandedId(null);
+    } catch (err) {
+      console.error('Erro ao salvar escala:', err);
+    }
+    setSaving(null);
   }
 
   async function handleAddVoluntario(e: React.FormEvent) {
@@ -145,71 +184,17 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
             ›
           </button>
         </div>
-
-        {isAuthenticated && (
-          <button
-            onClick={() => { setEscalaEditando(undefined); setShowForm(true); }}
-            className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
-            style={{ backgroundColor: cor, color: '#000' }}
-          >
-            + Escala
-          </button>
-        )}
       </div>
 
-      {/* ─── Escalas ─── */}
+      {/* ─── Escalas (inline expand) ─── */}
       {loading ? (
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="skeleton rounded-2xl h-24" style={{ animationDelay: `${i * 0.1}s` }} />
+            <div key={i} className="skeleton rounded-2xl h-16" style={{ animationDelay: `${i * 0.1}s` }} />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-3 stagger">
-          {eventosComEscala.map(({ escala, evento }) => (
-            <EscalaCard
-              key={escala.id}
-              escala={escala}
-              evento={evento!}
-              area={area}
-              isAuthenticated={isAuthenticated}
-              onEdit={() => { setEscalaEditando(escala); setShowForm(true); }}
-              onDelete={() => setConfirmDelete(escala.id)}
-            />
-          ))}
-
-          {eventosSemEscala.map(evento => {
-            const d = new Date(evento.data + 'T00:00:00');
-            const dataFmt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', weekday: 'long' });
-            return (
-              <div
-                key={evento.id}
-                className="rounded-2xl p-4 flex items-center justify-between gap-4"
-                style={{ backgroundColor: 'var(--bg-card)', border: '1px dashed var(--border-color)' }}
-              >
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider capitalize" style={{ color: 'var(--text-secondary)' }}>
-                    {dataFmt}
-                  </p>
-                  <p className="font-semibold mt-0.5" style={{ color: 'var(--text-primary)' }}>{evento.titulo}</p>
-                  <p className="text-xs mt-1 italic" style={{ color: 'var(--text-muted)' }}>Não preenchido</p>
-                </div>
-                {isAuthenticated && (
-                  <button
-                    onClick={() => {
-                      setEscalaEditando({ id: '', evento_id: evento.id, area_id: area.id, voluntarios: [] });
-                      setShowForm(true);
-                    }}
-                    className="flex-shrink-0 text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-80"
-                    style={{ backgroundColor: `${cor}20`, border: `1px solid ${cor}40`, color: cor }}
-                  >
-                    Preencher
-                  </button>
-                )}
-              </div>
-            );
-          })}
-
+        <div className="flex flex-col gap-2 stagger">
           {eventosSorted.length === 0 && (
             <div
               className="rounded-2xl p-10 text-center"
@@ -220,6 +205,228 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
               <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Cadastre eventos no início do Dashboard</p>
             </div>
           )}
+
+          {eventosSorted.map(evento => {
+            const escala = escalas.find(e => e.evento_id === evento.id);
+            const isOpen = expandedId === evento.id;
+            const d = new Date(evento.data + 'T00:00:00');
+            const diaNum = d.getDate();
+            const mesAbrev = MESES_PT[d.getMonth()].slice(0, 3).toUpperCase();
+            const diaSem = DIAS_SEMANA[d.getDay()];
+            const volCount = escala?.voluntarios?.length ?? 0;
+            const volDraft = draftVols[evento.id] ?? [];
+
+            return (
+              <div
+                key={evento.id}
+                className="overflow-hidden"
+                style={{
+                  borderRadius: isOpen ? '16px 16px 16px 16px' : '16px',
+                  border: `1px solid ${isOpen ? cor + '50' : 'var(--border-color)'}`,
+                  backgroundColor: 'var(--bg-card)',
+                  transition: 'border-color 0.2s ease',
+                }}
+              >
+                {/* Row header */}
+                <button
+                  onClick={() => handleOpen(evento.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                  style={{ cursor: 'pointer', background: 'none' }}
+                >
+                  {/* Date badge */}
+                  <div
+                    className="flex-shrink-0 flex flex-col items-center justify-center rounded-xl"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      backgroundColor: isOpen ? `${cor}20` : 'var(--bg-card-2)',
+                      border: `1px solid ${isOpen ? cor + '40' : 'var(--border-color)'}`,
+                      transition: 'background-color 0.2s ease, border-color 0.2s ease',
+                    }}
+                  >
+                    <span className="font-black leading-none text-lg" style={{ color: isOpen ? cor : 'var(--text-primary)' }}>{diaNum}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider leading-none mt-0.5" style={{ color: isOpen ? cor + 'bb' : 'var(--text-muted)' }}>{mesAbrev}</span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-px self-stretch mx-1" style={{ backgroundColor: 'var(--border-color)' }} />
+
+                  {/* Middle info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{diaSem}</p>
+                    <p className="font-semibold text-sm truncate mt-0.5" style={{ color: 'var(--text-primary)' }}>{evento.titulo}</p>
+                    {escala ? (
+                      <p className="text-xs mt-0.5" style={{ color: cor }}>
+                        {volCount} voluntário{volCount !== 1 ? 's' : ''} escalado{volCount !== 1 ? 's' : ''}
+                      </p>
+                    ) : (
+                      <p className="text-xs mt-0.5 italic" style={{ color: 'var(--text-muted)' }}>Sem escala</p>
+                    )}
+                  </div>
+
+                  {/* Right: chevron + delete */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isAuthenticated && escala && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          setConfirmDelete(escala.id);
+                        }}
+                        className="w-6 h-6 flex items-center justify-center rounded-lg text-xs font-bold transition-colors"
+                        style={{ color: '#EF4444', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
+                        title="Excluir escala"
+                      >
+                        ✕
+                      </button>
+                    )}
+                    <span
+                      className="text-base transition-transform duration-200"
+                      style={{
+                        color: 'var(--text-muted)',
+                        display: 'inline-block',
+                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      }}
+                    >
+                      ▾
+                    </span>
+                  </div>
+                </button>
+
+                {/* Expanded checklist */}
+                {isOpen && (
+                  <div
+                    style={{
+                      borderTop: `1px solid ${cor}30`,
+                      backgroundColor: 'var(--bg-card-2)',
+                      padding: '16px',
+                    }}
+                  >
+                    {voluntarios.length === 0 ? (
+                      <p className="text-sm italic mb-3" style={{ color: 'var(--text-muted)' }}>
+                        Nenhum voluntário cadastrado nesta área.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2 mb-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                          Voluntários
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {voluntarios.map(v => {
+                            const checked = volDraft.includes(v.nome);
+                            if (!isAuthenticated) {
+                              // Read-only: just show names
+                              const inEscala = escala?.voluntarios?.includes(v.nome) ?? false;
+                              if (!inEscala) return null;
+                              return (
+                                <span
+                                  key={v.id}
+                                  className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                                  style={{
+                                    backgroundColor: `${cor}20`,
+                                    border: `1px solid ${cor}40`,
+                                    color: cor,
+                                  }}
+                                >
+                                  {v.nome}
+                                </span>
+                              );
+                            }
+                            return (
+                              <label
+                                key={v.id}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer select-none transition-all"
+                                style={{
+                                  backgroundColor: checked ? `${cor}20` : 'var(--bg-card)',
+                                  border: `1px solid ${checked ? cor + '60' : 'var(--border-color)'}`,
+                                  color: checked ? cor : 'var(--text-secondary)',
+                                }}
+                              >
+                                {/* Visual checkbox */}
+                                <span
+                                  className="flex-shrink-0 flex items-center justify-center rounded"
+                                  style={{
+                                    width: '14px',
+                                    height: '14px',
+                                    backgroundColor: checked ? cor : 'transparent',
+                                    border: `1.5px solid ${checked ? cor : 'var(--border-color)'}`,
+                                    transition: 'background-color 0.15s ease, border-color 0.15s ease',
+                                  }}
+                                >
+                                  {checked && (
+                                    <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                                      <path d="M1 3L3 5L7 1" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  className="sr-only"
+                                  checked={checked}
+                                  onChange={() => toggleVol(evento.id, v.nome)}
+                                />
+                                {v.nome}
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {!isAuthenticated && (escala?.voluntarios?.length ?? 0) === 0 && (
+                          <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>Nenhum voluntário escalado.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Observação field (auth only) */}
+                    {isAuthenticated && (
+                      <div className="mb-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Observação</p>
+                        <textarea
+                          value={draftObs[evento.id] ?? ''}
+                          onChange={e => setDraftObs(prev => ({ ...prev, [evento.id]: e.target.value }))}
+                          placeholder="Observações sobre esta escala..."
+                          rows={2}
+                          className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none resize-none"
+                          style={{
+                            backgroundColor: 'var(--bg-card)',
+                            border: `1px solid ${cor}30`,
+                            color: 'var(--text-primary)',
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Observação read-only */}
+                    {!isAuthenticated && escala?.observacao && (
+                      <div className="mb-4 rounded-xl px-3 py-2 text-sm" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>Observação</span>
+                        {escala.observacao}
+                      </div>
+                    )}
+
+                    {/* Save/Cancel (auth only) */}
+                    {isAuthenticated && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveInline(evento.id)}
+                          disabled={saving === evento.id}
+                          className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity disabled:opacity-50"
+                          style={{ backgroundColor: cor, color: '#000' }}
+                        >
+                          {saving === evento.id ? 'Salvando...' : 'Salvar'}
+                        </button>
+                        <button
+                          onClick={() => setExpandedId(null)}
+                          className="px-4 py-2 rounded-xl text-xs font-semibold"
+                          style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -369,27 +576,6 @@ export default function AreaPanel({ area, isAuthenticated, user }: AreaPanelProp
           </div>
         </form>
       </div>
-
-      {/* EscalaForm modal */}
-      {showForm && (
-        <EscalaForm
-          eventos={eventosSorted}
-          areaId={area.id}
-          areaCor={area.cor}
-          areaNome={area.nome}
-          escalaExistente={escalaEditando?.id ? escalaEditando : undefined}
-          onSave={async (data) => {
-            try {
-              await saveEscala(data);
-              await refreshEscalas();
-            } catch (err) {
-              console.error('Erro ao salvar escala:', err);
-            }
-          }}
-          onClose={() => { setShowForm(false); setEscalaEditando(undefined); }}
-          user={user}
-        />
-      )}
 
       {/* Confirm delete */}
       {confirmDelete && (
