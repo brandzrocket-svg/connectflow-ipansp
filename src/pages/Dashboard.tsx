@@ -80,26 +80,28 @@ export default function Dashboard() {
     return (
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
+        <div className="px-5 pt-6 pb-5">
           <button onClick={() => navTo('home')} className="bg-transparent border-0 p-0 cursor-pointer block">
-            <img src="/logo-connect.png" alt="Connect IPAN SP" style={{ height: '26px', width: 'auto' }} />
+            <img src="/logo-connect.png" alt="Connect IPAN SP" style={{ height: '28px', width: 'auto' }} />
           </button>
         </div>
 
         {/* Navigation — scrollable */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-0.5">
-          {/* Main nav */}
+        <nav className="flex-1 overflow-y-auto px-3 py-1 flex flex-col gap-0.5">
+          {/* Main section */}
+          <p className="text-[9px] font-bold uppercase tracking-widest px-2 pt-1 pb-2" style={{ color: 'var(--text-muted)' }}>
+            Módulos
+          </p>
           {[
-            { id: 'escalas',    icon: '📅', label: 'Escalas'     },
-            { id: 'visao-geral', icon: '📊', label: 'Visão Geral' },
-            { id: 'sobre',       icon: 'ℹ️',  label: 'Sobre'       },
+            { id: 'escalas',     icon: '📅', label: 'Escalas'      },
+            { id: 'visao-geral', icon: '📊', label: 'Visão Geral'  },
+            { id: 'sobre',       icon: 'ℹ️',  label: 'Sobre'        },
           ].map(({ id, icon, label }) => (
             <NavBtn key={id} id={id} icon={icon} label={label} currentView={view} onNav={navTo} />
           ))}
 
-          {/* Divider + Areas */}
-          <div className="my-2 mx-1" style={{ borderTop: '1px solid var(--border-color)' }} />
-          <p className="text-[10px] font-bold uppercase tracking-widest px-3 pb-1" style={{ color: 'var(--text-muted)' }}>
+          {/* Areas section */}
+          <p className="text-[9px] font-bold uppercase tracking-widest px-2 pt-4 pb-2" style={{ color: 'var(--text-muted)' }}>
             Áreas
           </p>
           {AREAS.map(area => (
@@ -108,45 +110,48 @@ export default function Dashboard() {
         </nav>
 
         {/* Bottom controls */}
-        <div className="px-2 py-3 flex flex-col gap-1" style={{ borderTop: '1px solid var(--border-color)' }}>
+        <div className="px-3 py-4 flex flex-col gap-0.5" style={{ borderTop: '1px solid var(--border-color)' }}>
           {/* Tutorial */}
           <button
             onClick={() => { setShowTutorial(true); setSidebarOpen(false); }}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left w-full text-sm transition-all"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-left w-full text-xs font-medium transition-all"
             style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
-            <span className="text-base flex-shrink-0">▶</span>
+            <span className="flex-shrink-0 text-sm">▶</span>
             <span className="truncate">Tutorial</span>
           </button>
 
-          {/* Theme toggle — hidden (light mode disabled for now) */}
-
           {/* Auth */}
           {user ? (
-            <div>
-              <p className="text-[10px] px-3 pb-1 truncate" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
+            <>
+              <div className="flex items-center gap-2.5 px-3 py-2">
+                <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-black" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}>
+                  {user.email?.[0]?.toUpperCase()}
+                </div>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
+              </div>
               <button
                 onClick={() => logout()}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left w-full text-sm transition-all"
-                style={{ color: '#EF4444' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.08)')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-left w-full text-xs font-medium transition-all"
+                style={{ color: 'rgba(239,68,68,0.7)' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#EF4444'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(239,68,68,0.7)'; }}
               >
-                <span className="text-base flex-shrink-0">→</span>
+                <span className="flex-shrink-0">↪</span>
                 <span className="truncate">Sair</span>
               </button>
-            </div>
+            </>
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left w-full text-sm transition-all"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-left w-full text-xs font-medium transition-all"
               style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
             >
-              <span className="text-base flex-shrink-0">→</span>
+              <span className="flex-shrink-0">→</span>
               <span className="truncate">Entrar</span>
             </button>
           )}
@@ -162,7 +167,7 @@ export default function Dashboard() {
       <aside
         className="hidden lg:flex flex-col flex-shrink-0"
         style={{
-          width: '200px',
+          width: '210px',
           height: '100vh',
           backgroundColor: 'var(--bg-card)',
           borderRight: '1px solid var(--border-color)',
@@ -362,118 +367,100 @@ function WelcomeHome({ onNavigate }: { onNavigate: (v: string) => void }) {
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
 
-      {/* Hero */}
+      {/* ── Hero card com bg-design ── */}
       <div
-        className="rounded-2xl px-8 py-12 text-center"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+        className="relative rounded-2xl overflow-hidden"
+        style={{ minHeight: '210px', backgroundColor: '#0A0A0D', border: '1px solid rgba(255,255,255,0.07)' }}
       >
-        <img
-          src="/logo-connect.png"
-          alt="ConnectFlow"
-          style={{ height: '38px', width: 'auto', margin: '0 auto 20px' }}
-        />
-        <h1 className="font-black text-2xl sm:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
-          Bem-vindo ao ConnectFlow
-        </h1>
-        <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: 'var(--text-secondary)' }}>
-          App de escalas do Ministério de Mídia da IPAN São Paulo
-        </p>
-      </div>
-
-      {/* Versículo */}
-      <div
-        className="rounded-2xl px-8 py-8"
-        style={{ backgroundColor: '#000000', border: '1px solid rgba(255,255,255,0.07)' }}
-      >
-        <p
-          className="text-[10px] font-bold uppercase tracking-widest mb-5"
-          style={{ color: 'rgba(255,255,255,0.3)' }}
-        >
-          Palavra
-        </p>
-        <blockquote className="relative">
-          <span
-            className="absolute -top-3 -left-1 text-5xl font-serif leading-none select-none"
-            style={{ color: 'rgba(255,255,255,0.08)' }}
-          >
-            "
-          </span>
-          <p
-            className="text-base sm:text-lg font-light leading-relaxed pl-4 italic"
-            style={{ color: 'rgba(255,255,255,0.85)' }}
-          >
-            Tudo o que fizerem, façam de todo o coração, como para o Senhor, e não para os homens,
-            sabendo que receberão do Senhor a recompensa da herança, pois é a Cristo, o Senhor,
-            a quem vocês estão servindo.
+        {/* Background image — right portion */}
+        <div style={{
+          position: 'absolute', right: 0, top: 0, bottom: 0, width: '60%',
+          backgroundImage: 'url(/bg-design.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center left',
+        }} />
+        {/* Gradient overlay left-to-right */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, #0A0A0D 42%, rgba(10,10,13,0.85) 62%, rgba(10,10,13,0.1) 100%)',
+        }} />
+        {/* Content */}
+        <div className="relative z-10 px-8 py-10">
+          <img src="/logo-connect.png" alt="Connect" style={{ height: '24px', width: 'auto', marginBottom: '20px', opacity: 0.9 }} />
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            Ministério de Mídia · IPAN SP · 2026
           </p>
-          <p
-            className="mt-4 pl-4 text-xs font-semibold tracking-wide"
-            style={{ color: 'rgba(255,255,255,0.35)' }}
-          >
-            — Colossenses 3:23-24
+          <h1 className="font-black leading-none mb-3" style={{ color: '#FFFFFF', fontSize: 'clamp(2rem,5vw,3rem)' }}>
+            Bem-vindo 👋
+          </h1>
+          <p className="text-sm font-light" style={{ color: 'rgba(255,255,255,0.45)' }}>
+            Gerencie escalas, voluntários e agenda do ministério.
           </p>
-        </blockquote>
-      </div>
-
-      {/* Quick access */}
-      <div
-        className="rounded-2xl p-6"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-      >
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-          Acesso Rápido
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <QuickCard icon="📅" label="Escalas" sub="Ver agenda do mês" onClick={() => onNavigate('escalas')} />
-          <QuickCard icon="📊" label="Visão Geral" sub="Relatórios e ranking" onClick={() => onNavigate('visao-geral')} />
-          <QuickCard icon="ℹ️" label="Sobre" sub="Cultura e mandamentos" onClick={() => onNavigate('sobre')} />
         </div>
       </div>
 
-      {/* Areas */}
+      {/* ── Stats row ── */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Áreas', value: '8', sub: 'no ministério' },
+          { label: 'Eventos Jun', value: '9', sub: 'neste mês' },
+          { label: 'Módulos', value: '3', sub: 'disponíveis' },
+        ].map(({ label, value, sub }) => (
+          <div
+            key={label}
+            className="rounded-2xl p-5"
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+          >
+            <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
+            <p className="font-black text-3xl leading-none" style={{ color: 'var(--text-primary)' }}>{value}</p>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Versículo ── */}
       <div
-        className="rounded-2xl p-6"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+        className="rounded-2xl px-7 py-6 relative overflow-hidden"
+        style={{ backgroundColor: '#080810', border: '1px solid rgba(255,255,255,0.05)' }}
       >
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+        <span className="absolute right-4 top-0 text-8xl font-serif leading-none select-none pointer-events-none" style={{ color: 'rgba(255,255,255,0.04)' }}>"</span>
+        <p className="text-[9px] font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.2)' }}>Palavra</p>
+        <p className="text-sm sm:text-base font-light leading-relaxed italic" style={{ color: 'rgba(255,255,255,0.75)' }}>
+          "Tudo o que fizerem, façam de todo o coração, como para o Senhor, e não para os homens, sabendo que receberão do Senhor a recompensa da herança, pois é a Cristo, o Senhor, a quem vocês estão servindo."
+        </p>
+        <p className="text-xs font-semibold mt-4" style={{ color: 'rgba(255,255,255,0.28)' }}>— Colossenses 3:23-24</p>
+      </div>
+
+      {/* ── Áreas ── */}
+      <div>
+        <p className="text-[9px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
           Áreas do Ministério
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 stagger">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger">
           {AREAS.map(area => {
             const cor = area.cor === '#FFFFFF' ? '#888888' : area.cor;
             return (
               <button
                 key={area.id}
                 onClick={() => onNavigate(area.id)}
-                className="text-left rounded-xl p-4 transition-all hover:opacity-90"
-                style={{ backgroundColor: 'var(--bg-card-2)', border: `1px solid ${cor}30` }}
+                className="text-left rounded-2xl p-4 transition-all"
+                style={{ backgroundColor: 'var(--bg-card)', border: `1px solid rgba(255,255,255,0.06)` }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = `${cor}55`; e.currentTarget.style.backgroundColor = `${cor}0A`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.backgroundColor = 'var(--bg-card)'; }}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
-                  <span className="text-base">{area.icone}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${cor}20` }}>
+                  <span className="text-sm">{area.icone}</span>
                 </div>
                 <p className="font-bold text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>{area.nome}</p>
-                <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{area.colider}</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
+                  <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{area.colider}</p>
+                </div>
               </button>
             );
           })}
         </div>
       </div>
     </div>
-  );
-}
-
-function QuickCard({ icon, label, sub, onClick }: { icon: string; label: string; sub: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="text-left rounded-xl p-4 transition-all hover:opacity-80"
-      style={{ backgroundColor: 'var(--bg-card-2)', border: '1px solid var(--border-color)' }}
-    >
-      <span className="text-xl block mb-2">{icon}</span>
-      <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{label}</p>
-      <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{sub}</p>
-    </button>
   );
 }
 
@@ -489,24 +476,25 @@ function NavBtn({
   area?: { cor: string };
 }) {
   const active = currentView === id;
-  const cor = area?.cor && area.cor !== '#FFFFFF' ? area.cor : '#6B7280';
+  const cor = area?.cor && area.cor !== '#FFFFFF' ? area.cor : 'rgba(255,255,255,0.4)';
 
   return (
     <button
       onClick={() => onNav(id)}
-      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-sm w-full transition-all duration-150 group"
+      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs w-full transition-all duration-150"
       style={{
-        backgroundColor: active ? (area ? `${cor}18` : 'var(--bg-card-2)') : 'transparent',
-        color: active ? (area ? cor : 'var(--text-primary)') : 'var(--text-secondary)',
+        backgroundColor: active ? 'rgba(255,255,255,0.08)' : 'transparent',
+        color: active ? '#FFFFFF' : 'rgba(255,255,255,0.42)',
         fontWeight: active ? 600 : 400,
+        borderLeft: active ? `2px solid ${area ? cor : 'rgba(255,255,255,0.5)'}` : '2px solid transparent',
       }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'var(--bg-card-2)'; }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent'; }}
+      onMouseEnter={e => { if (!active) { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; } }}
+      onMouseLeave={e => { if (!active) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.42)'; } }}
     >
       {area ? (
-        <span className="w-2 h-2 rounded-full flex-shrink-0 transition-transform group-hover:scale-110" style={{ backgroundColor: cor }} />
+        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: active ? cor : 'rgba(255,255,255,0.2)' }} />
       ) : (
-        <span className="text-sm flex-shrink-0">{icon}</span>
+        <span className="text-sm flex-shrink-0 w-4 text-center">{icon}</span>
       )}
       <span className="truncate">{label}</span>
     </button>
