@@ -8,9 +8,14 @@ export function useEscalas(areaId?: string) {
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    const data = areaId ? await getEscalasByArea(areaId) : await getEscalas()
-    setEscalas(data)
-    setLoading(false)
+    try {
+      const data = areaId ? await getEscalasByArea(areaId) : await getEscalas()
+      setEscalas(data)
+    } catch (err) {
+      console.error('Erro ao carregar escalas:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [areaId])
 
   useEffect(() => { refresh() }, [refresh])

@@ -8,9 +8,14 @@ export function useEventos(year: number, month: number) {
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    const data = await getEventosByMonth(year, month)
-    setEventos(data)
-    setLoading(false)
+    try {
+      const data = await getEventosByMonth(year, month)
+      setEventos(data)
+    } catch (err) {
+      console.error('Erro ao carregar eventos:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [year, month])
 
   useEffect(() => { refresh() }, [refresh])
