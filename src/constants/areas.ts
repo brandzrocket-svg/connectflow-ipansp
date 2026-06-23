@@ -6,5 +6,4 @@ export const AREAS: Area[] = [
   { id: 'projecao', nome: 'Projeção & Iluminação', cor: '#D946EF', colider: 'Abigail Justino', icone: '🎬' },
   { id: 'livestream', nome: 'Livestream', cor: '#EF4444', colider: 'A definir', icone: '🔴' },
   { id: 'apoio', nome: 'Apoio / Direção', cor: '#3B82F6', colider: 'Thaiany Aguiar', icone: '🎯' },
-  { id: 'eventos', nome: 'Eventos e Momentos', cor: '#FFFFFF', colider: 'Carolina Prado', icone: '✨' },
 ];
